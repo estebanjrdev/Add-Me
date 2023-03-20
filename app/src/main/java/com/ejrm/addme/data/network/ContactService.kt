@@ -7,7 +7,7 @@ import javax.inject.Inject
 
 class ContactService @Inject constructor(private val api:ContactApiClient) {
 
-    suspend fun getQuotes(): List<Contact> {
+    suspend fun getContact(): List<Contact> {
         return withContext(Dispatchers.IO) {
             val response = api.getAllContact()
             response.body() ?: emptyList()

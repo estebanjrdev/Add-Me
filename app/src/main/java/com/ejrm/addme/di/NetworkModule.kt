@@ -24,7 +24,7 @@ object NetworkModule {
 
     @Singleton
     @Provides
-    fun provideQuoteApiClient(retrofit: Retrofit): ContactApiClient {
+    fun provideContactApiClient(retrofit: Retrofit): ContactApiClient {
         return retrofit.create(ContactApiClient::class.java)
     }
 }
