@@ -3,16 +3,41 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".ui.MainActivity">
+    android:layout_height="match_parent">
 
-    <TextView
-        android:layout_width="wrap_content"
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/mcv_search_view"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Hello World!"
+        android:layout_marginHorizontal="@dimen/margin_normal"
+        android:layout_marginVertical="@dimen/margin_small"
+        app:cardCornerRadius="@dimen/search_view_radius"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <SearchView
+            android:id="@+id/searchView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:iconifiedByDefault="false"
+            android:imeOptions="actionDone|flagNoExtractUi"
+            android:queryBackground="@color/transparent"
+            android:queryHint="Buscar Contacto"
+            android:searchHintIcon="@null"
+            android:searchIcon="@null" />
+
+    </com.google.android.material.card.MaterialCardView>
+
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_tragos"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="@dimen/margin_small"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/mcv_search_view"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
