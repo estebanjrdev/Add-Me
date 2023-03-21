@@ -21,6 +21,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:iconifiedByDefault="false"
+            android:visibility="gone"
             android:imeOptions="actionDone|flagNoExtractUi"
             android:queryBackground="@color/transparent"
             android:queryHint="Buscar Contacto"
@@ -29,11 +30,42 @@
 
     </com.google.android.material.card.MaterialCardView>
 
+    <com.facebook.shimmer.ShimmerFrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:shimmer_auto_start="true"
+        tools:ignore="MissingConstraints">
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:id="@+id/view_loading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="visible"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <include layout="@layout/card_item_load" />
+
+            <include layout="@layout/card_item_load" />
+
+            <include layout="@layout/card_item_load" />
+
+            <include layout="@layout/card_item_load" />
+
+            <include layout="@layout/card_item_load" />
+
+            <include layout="@layout/card_item_load" />
+
+            <include layout="@layout/card_item_load" />
+
+        </androidx.appcompat.widget.LinearLayoutCompat>
+    </com.facebook.shimmer.ShimmerFrameLayout>
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_tragos"
+        android:id="@+id/recycler_contact"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:visibility="gone"
         android:layout_marginTop="@dimen/margin_small"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
