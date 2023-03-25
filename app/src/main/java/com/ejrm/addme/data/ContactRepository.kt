@@ -7,7 +7,6 @@ import javax.inject.Inject
 class ContactRepository @Inject constructor(
     private val api: ContactService
 ) {
-
     suspend fun getAllContact(): List<Contact> {
         return api.getContact()
     }

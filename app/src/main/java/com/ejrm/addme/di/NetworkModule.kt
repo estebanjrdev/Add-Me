@@ -17,7 +17,7 @@ object NetworkModule {
     @Provides
     fun provideRetrofit():Retrofit{
         return Retrofit.Builder()
-            .baseUrl("https://drawsomething-59328-default-rtdb.europe-west1.firebasedatabase.app/")
+            .baseUrl("http://tuapkmovil.125mb.com/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
