@@ -11,12 +11,16 @@ import com.ejrm.addme.data.model.Contact
 import com.ejrm.addme.databinding.CardItemRecyclerBinding
 
 
-class ContactAdapter(private val onClickListener: ContactAdapterListener) :
+class ContactAdapter(
+    private var contactList: List<Contact>,
+    private val onClickListener: ContactAdapterListener
+) :
     RecyclerView.Adapter<ContactAdapter.ViewHolder>() {
-    private var contactList: List<Contact>? = null
-    interface ContactAdapterListener{
+
+    interface ContactAdapterListener {
         fun onContactSelected(contact: Contact)
     }
+
     fun setContacList(contactList: List<Contact>) {
         this.contactList = contactList
     }
@@ -28,18 +32,19 @@ class ContactAdapter(private val onClickListener: ContactAdapterListener) :
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(contactList!![position], onClickListener)
+        holder.bind(contactList[position], onClickListener)
     }
 
-    fun updateStations(contactList: List<Contact>){
+    fun updateStations(contactList: List<Contact>) {
         this.contactList = contactList
         notifyDataSetChanged()
     }
 
-    override fun getItemCount(): Int = contactList?.size!!
+    override fun getItemCount(): Int = contactList.size
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val emisoraCardBinding = CardItemRecyclerBinding.bind(view)
+
         @RequiresApi(Build.VERSION_CODES.O)
         fun bind(contact: Contact, onClickListener: ContactAdapterListener) {
             emisoraCardBinding.txtName.text = contact.name

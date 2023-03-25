@@ -11,13 +11,13 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(private val getContact: GetContact) : ViewModel() {
-    var livedatalist: MutableLiveData<List<Contact>> = MutableLiveData()
+    private var livedatalist: MutableLiveData<List<Contact>> = MutableLiveData()
 
     fun getLiveDataObserver(): MutableLiveData<List<Contact>> {
         return livedatalist
     }
 
-    fun getAllContact(){
+    fun getAllContact() {
         viewModelScope.launch {
             val contacts = getContact.invoke()
             livedatalist.postValue(contacts)

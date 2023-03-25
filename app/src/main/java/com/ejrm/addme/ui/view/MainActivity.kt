@@ -25,25 +25,36 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import java.net.HttpURLConnection
 import java.net.URL
+import java.sql.DriverManager
+import java.sql.DriverManager.println
 import java.util.jar.Manifest
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-    private lateinit var viewModel: MainViewModel
+    lateinit var viewModel: MainViewModel
     private lateinit var adapter: ContactAdapter
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
-        initViewModel()
-        iniRecyclerView()
+        binding.recyclerContact.layoutManager = LinearLayoutManager(this)
+        val listempty: List<Contact> = emptyList()
+        adapter = ContactAdapter(listempty, ContactItemClickListener())
+        binding.recyclerContact.adapter = adapter
+        viewModel.getLiveDataObserver().observe(this, Observer {
+            println(it.size)
+            adapter.setContacList(it)
+            adapter.notifyDataSetChanged()
+        })
+        viewModel.getAllContact()
     }
 
     private inner class ContactItemClickListener : ContactAdapter.ContactAdapterListener {
         override fun onContactSelected(contact: Contact) {
-
+            //listener
         }
     }
 
@@ -89,31 +100,15 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        registerReceiver(estadoRed, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
+        //registerReceiver(estadoRed, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
     }
 
-    private fun iniRecyclerView() {
-        binding.recyclerContact.layoutManager = LinearLayoutManager(this)
-        adapter = ContactAdapter(ContactItemClickListener())
-        binding.recyclerContact.adapter = adapter
-    }
+    private fun initRecyclerView() {
 
-    private fun initViewModel(){
-        viewModel.getLiveDataObserver().observe(this, Observer {
-            if(it != null) {
-                adapter.setContacList(it)
-                adapter.notifyDataSetChanged()
-            } else {
-                Toast.makeText(this, "Error in getting list", Toast.LENGTH_SHORT).show()
-            }
-        })
-        viewModel.getAllContact()
     }
 
     private val estadoRed = object : BroadcastReceiver() {
         override fun onReceive(p0: Context?, p1: Intent?) {
-            initViewModel()
-            iniRecyclerView()
             if (checkForInternet(baseContext)) {
                 GlobalScope.launch(Dispatchers.Main) {
                     var response =
