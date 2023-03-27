@@ -100,10 +100,19 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        //registerReceiver(estadoRed, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
+        registerReceiver(estadoRed, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
     }
 
     private fun initRecyclerView() {
+        val listempty: List<Contact> = emptyList()
+        adapter = ContactAdapter(listempty, ContactItemClickListener())
+        binding.recyclerContact.adapter = adapter
+        viewModel.getLiveDataObserver().observe(this, Observer {
+            println(it.size)
+            adapter.setContacList(it)
+            adapter.notifyDataSetChanged()
+        })
+        viewModel.getAllContact()
 
     }
 

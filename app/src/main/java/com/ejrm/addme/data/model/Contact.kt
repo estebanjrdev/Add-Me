@@ -6,6 +6,5 @@ data class Contact (
     @SerializedName("name") val name: String,
     @SerializedName("phone") val phone: String,
     @SerializedName("instagram") val instagram: String,
-    @SerializedName("facebook") val facebook: String,
-    @SerializedName("likee") val likee: String
+    @SerializedName("facebook") val facebook: String
         )
