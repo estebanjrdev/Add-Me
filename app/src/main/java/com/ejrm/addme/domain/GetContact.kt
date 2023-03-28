@@ -4,5 +4,5 @@ import com.ejrm.addme.data.ContactRepository
 import javax.inject.Inject
 
 class GetContact @Inject constructor(private val repository: ContactRepository) {
-    suspend operator fun invoke() = repository.getLocal()
+    suspend operator fun invoke() = repository.getAllContact()
 }

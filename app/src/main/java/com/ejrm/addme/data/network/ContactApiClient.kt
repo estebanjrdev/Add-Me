@@ -6,6 +6,6 @@ import retrofit2.http.GET
 
 
 interface ContactApiClient {
-    @GET("/.json")
+    @GET("/")
     suspend fun getAllContact(): Response<List<Contact>>
 }
