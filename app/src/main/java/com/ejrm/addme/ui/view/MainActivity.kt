@@ -9,6 +9,8 @@ import android.net.NetworkCapabilities
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.Toast
 import androidx.annotation.RequiresPermission
 import androidx.core.view.isVisible
@@ -39,6 +41,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
         binding.recyclerContact.layoutManager = LinearLayoutManager(this)
         val listempty: List<Contact> = emptyList()
@@ -150,5 +153,19 @@ class MainActivity : AppCompatActivity() {
                 binding.recyclerContact.isVisible = false
             }
         }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.main_menu,menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when(item.itemId){
+            R.id.add->{
+                
+            }
+        }
+        return super.onOptionsItemSelected(item)
     }
 }
