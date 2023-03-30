@@ -35,11 +35,6 @@ class ContactAdapter(
         holder.bind(contactList[position], onClickListener)
     }
 
-    fun updateStations(contactList: List<Contact>) {
-        this.contactList = contactList
-        notifyDataSetChanged()
-    }
-
     override fun getItemCount(): Int = contactList.size
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {

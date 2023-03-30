@@ -14,5 +14,11 @@ class ContactService @Inject constructor(private val api: ContactApiClient) {
             response.body() ?: emptyList()
         }
     }
+    suspend fun getSearch(search: String): List<Contact> {
+        return withContext(Dispatchers.IO) {
+            val response = api.searchContact(search)
+            response.body() ?: emptyList()
+        }
+    }
 
 }

@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.SearchView
 import android.widget.Toast
 import androidx.annotation.RequiresPermission
 import androidx.core.view.isVisible
@@ -41,24 +42,44 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        initViewModel()
 
-        viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
-        binding.recyclerContact.layoutManager = LinearLayoutManager(this)
-        val listempty: List<Contact> = emptyList()
-        adapter = ContactAdapter(listempty, ContactItemClickListener())
-        binding.recyclerContact.adapter = adapter
-        viewModel.getLiveDataObserver().observe(this, Observer {
-            println(it.size)
-            adapter.setContacList(it)
-            adapter.notifyDataSetChanged()
+        binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(p0: String?): Boolean {
+                viewModel.getLiveDataObserver().observe(this@MainActivity, Observer {
+                    println(it)
+                    adapter.setContacList(it)
+                    adapter.notifyDataSetChanged()
+                })
+                viewModel.search(p0!!)
+                return true
+            }
+
+            override fun onQueryTextChange(p0: String?): Boolean {
+                return false
+            }
         })
-        viewModel.getAllContact()
+
     }
 
     private inner class ContactItemClickListener : ContactAdapter.ContactAdapterListener {
         override fun onContactSelected(contact: Contact) {
             //listener
         }
+    }
+
+    fun initViewModel() {
+        viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
+        binding.recyclerContact.layoutManager = LinearLayoutManager(this)
+        val listempty: List<Contact> = emptyList()
+        adapter = ContactAdapter(listempty, ContactItemClickListener())
+        binding.recyclerContact.adapter = adapter
+        viewModel.getLiveDataObserver().observe(this, Observer {
+            adapter.setContacList(it)
+            adapter.notifyDataSetChanged()
+        })
+        viewModel.getAllContact()
+
     }
 
     fun checkForInternet(context: Context): Boolean {
@@ -106,21 +127,9 @@ class MainActivity : AppCompatActivity() {
         registerReceiver(estadoRed, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
     }
 
-    private fun initRecyclerView() {
-        val listempty: List<Contact> = emptyList()
-        adapter = ContactAdapter(listempty, ContactItemClickListener())
-        binding.recyclerContact.adapter = adapter
-        viewModel.getLiveDataObserver().observe(this, Observer {
-            println(it.size)
-            adapter.setContacList(it)
-            adapter.notifyDataSetChanged()
-        })
-        viewModel.getAllContact()
-
-    }
-
     private val estadoRed = object : BroadcastReceiver() {
         override fun onReceive(p0: Context?, p1: Intent?) {
+            initViewModel()
             if (checkForInternet(baseContext)) {
                 GlobalScope.launch(Dispatchers.Main) {
                     var response =
@@ -156,14 +165,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.main_menu,menu)
+        menuInflater.inflate(R.menu.main_menu, menu)
         return super.onCreateOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when(item.itemId){
-            R.id.add->{
-                
+        when (item.itemId) {
+            R.id.add -> {
+
             }
         }
         return super.onOptionsItemSelected(item)

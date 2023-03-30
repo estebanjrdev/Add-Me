@@ -10,7 +10,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MainViewModel @Inject constructor(private val getContact: GetContact) : ViewModel() {
+class MainViewModel @Inject constructor(private val getContactDomain: GetContact) : ViewModel() {
     private var livedatalist: MutableLiveData<List<Contact>> = MutableLiveData()
 
     fun getLiveDataObserver(): MutableLiveData<List<Contact>> {
@@ -19,7 +19,13 @@ class MainViewModel @Inject constructor(private val getContact: GetContact) : Vi
 
     fun getAllContact() {
         viewModelScope.launch {
-            val contacts = getContact.invoke()
+            val contacts = getContactDomain.invoke()
+            livedatalist.postValue(contacts)
+        }
+    }
+    fun search(search: String) {
+        viewModelScope.launch {
+            val contacts = getContactDomain.invokeSearch(search)
             livedatalist.postValue(contacts)
         }
     }
