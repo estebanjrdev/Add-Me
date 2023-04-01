@@ -14,6 +14,7 @@ import android.view.MenuItem
 import android.widget.SearchView
 import android.widget.Toast
 import androidx.annotation.RequiresPermission
+import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -21,6 +22,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.ejrm.addme.R
 import com.ejrm.addme.data.model.Contact
 import com.ejrm.addme.databinding.ActivityMainBinding
+import com.ejrm.addme.databinding.AddContactBinding
 import com.ejrm.addme.ui.view.adapters.ContactAdapter
 import com.ejrm.addme.ui.viewmodel.MainViewModel
 import com.google.android.material.snackbar.Snackbar
@@ -38,6 +40,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     lateinit var viewModel: MainViewModel
     private lateinit var adapter: ContactAdapter
+    lateinit var listempty: List<Contact>
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -71,7 +74,6 @@ class MainActivity : AppCompatActivity() {
     fun initViewModel() {
         viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
         binding.recyclerContact.layoutManager = LinearLayoutManager(this)
-        val listempty: List<Contact> = emptyList()
         adapter = ContactAdapter(listempty, ContactItemClickListener())
         binding.recyclerContact.adapter = adapter
         viewModel.getLiveDataObserver().observe(this, Observer {
@@ -172,7 +174,11 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.add -> {
-
+                val addContactBinding = AddContactBinding.inflate(layoutInflater)
+                val alertdialog = AlertDialog.Builder(this)
+                alertdialog.setTitle("Contacto")
+                alertdialog.setView(addContactBinding.root)
+                alertdialog.show()
             }
         }
         return super.onOptionsItemSelected(item)
