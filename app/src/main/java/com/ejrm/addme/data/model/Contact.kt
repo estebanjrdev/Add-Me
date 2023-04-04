@@ -3,8 +3,8 @@ package com.ejrm.addme.data.model
 import com.google.gson.annotations.SerializedName
 
 data class Contact (
-    @SerializedName("name") val name: String,
-    @SerializedName("phone") val phone: String,
-    @SerializedName("instagram") val instagram: String,
-    @SerializedName("facebook") val facebook: String
+    @SerializedName("name") var name: String,
+    @SerializedName("phone") var phone: String,
+    @SerializedName("instagram") var instagram: String,
+    @SerializedName("facebook") var facebook: String
         )

@@ -11,9 +11,8 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.widget.SearchView
-import android.widget.Toast
-import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
 import androidx.lifecycle.Observer
@@ -30,22 +29,21 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import java.net.HttpURLConnection
 import java.net.URL
-import java.sql.DriverManager
 import java.sql.DriverManager.println
-import java.util.jar.Manifest
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     lateinit var viewModel: MainViewModel
+    lateinit var contact: Contact
     private lateinit var adapter: ContactAdapter
-    lateinit var listempty: List<Contact>
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        initViewModel()
+        viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
+        initRecyclerView()
 
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(p0: String?): Boolean {
@@ -71,9 +69,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun initViewModel() {
-        viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
+    fun initRecyclerView() {
         binding.recyclerContact.layoutManager = LinearLayoutManager(this)
+         var listempty: List<Contact> = emptyList()
         adapter = ContactAdapter(listempty, ContactItemClickListener())
         binding.recyclerContact.adapter = adapter
         viewModel.getLiveDataObserver().observe(this, Observer {
@@ -131,7 +129,7 @@ class MainActivity : AppCompatActivity() {
 
     private val estadoRed = object : BroadcastReceiver() {
         override fun onReceive(p0: Context?, p1: Intent?) {
-            initViewModel()
+            initRecyclerView()
             if (checkForInternet(baseContext)) {
                 GlobalScope.launch(Dispatchers.Main) {
                     var response =
@@ -178,6 +176,17 @@ class MainActivity : AppCompatActivity() {
                 val alertdialog = AlertDialog.Builder(this)
                 alertdialog.setTitle("Contacto")
                 alertdialog.setView(addContactBinding.root)
+                addContactBinding.btnAddContact.setOnClickListener(View.OnClickListener {
+                   viewModel.add(addContactBinding.name.text.toString(),addContactBinding.whatsapp.text.toString(),addContactBinding.instagram.text.toString(),addContactBinding.facebook.text.toString())
+                    viewModel.getisSuccefull().observe(this, Observer {
+                        if (it.isNotEmpty()){
+                            Snackbar.make(binding.root, "Contacto Agregado", Snackbar.LENGTH_LONG).show()
+                        } else {
+                            Snackbar.make(binding.root, "Contacto No Agregado", Snackbar.LENGTH_LONG).show()
+                        }
+                    })
+                    viewModel.getisSuccefull()
+                })
                 alertdialog.show()
             }
         }

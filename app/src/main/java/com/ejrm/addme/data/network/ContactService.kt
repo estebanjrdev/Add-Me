@@ -1,6 +1,7 @@
 package com.ejrm.addme.data.network
 
 import com.ejrm.addme.data.model.Contact
+import com.ejrm.addme.data.model.ContactResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.Collections.emptyList
@@ -20,5 +21,10 @@ class ContactService @Inject constructor(private val api: ContactApiClient) {
             response.body() ?: emptyList()
         }
     }
-
+    suspend fun addContact(name: String, phone: String, instagram: String, facebook: String): List<ContactResponse> {
+        return withContext(Dispatchers.IO) {
+            val response = api.addContact(name,phone,instagram,facebook)
+            response.body() ?: emptyList()
+        }
+    }
 }
