@@ -16,7 +16,7 @@ class MainViewModel @Inject constructor(private val getContactDomain: CrudContac
     val isSuccefull: MutableLiveData<List<ContactResponse>> = MutableLiveData()
 
     fun getLiveDataObserver(): MutableLiveData<List<Contact>> = livedatalist
-    fun getisSuccefull(): MutableLiveData<List<ContactResponse>> = isSuccefull
+    fun succefull(): MutableLiveData<List<ContactResponse>> = isSuccefull
 
     fun getAllContact() {
         viewModelScope.launch {
@@ -27,13 +27,13 @@ class MainViewModel @Inject constructor(private val getContactDomain: CrudContac
     fun search(search: String) {
         viewModelScope.launch {
             val contacts = getContactDomain.invokeSearch(search)
+            println(contacts)
             livedatalist.postValue(contacts)
         }
     }
     fun add(name: String, phone: String, instagram: String, facebook: String) {
         viewModelScope.launch {
             val Succefull = getContactDomain.invokeAdd(name,phone,instagram,facebook)
-            println(Succefull)
             isSuccefull.postValue(Succefull)
         }
     }

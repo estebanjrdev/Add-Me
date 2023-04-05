@@ -8,18 +8,18 @@ import retrofit2.http.*
 
 
 interface ContactApiClient {
-    @GET("/")
+    @GET("/api/")
     suspend fun getAllContact(): Response<List<Contact>>
 
-    @GET("/search")
+    @GET("/api/search/index.php")
     suspend fun searchContact(@Query("search") search: String): Response<List<Contact>>
 
     @FormUrlEncoded
-    @POST("/add")
+    @POST("/api/add/index.php")
     suspend fun addContact(
         @Field("name") name: String,
         @Field("phone") phone: String,
         @Field("instagram") instagram: String,
-        @Field("facebok") facebook: String
+        @Field("facebook") facebook: String
     ): Response<List<ContactResponse>>
 }

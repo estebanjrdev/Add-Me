@@ -48,7 +48,7 @@ class MainActivity : AppCompatActivity() {
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(p0: String?): Boolean {
                 viewModel.getLiveDataObserver().observe(this@MainActivity, Observer {
-                    println(it)
+                   /// println(it)
                     if(it.isNotEmpty()){
                     adapter.updateList(it)
                     } else {

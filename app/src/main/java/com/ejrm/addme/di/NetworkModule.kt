@@ -20,7 +20,7 @@ object NetworkModule {
     @Provides
     fun provideRetrofit():Retrofit{
         return Retrofit.Builder()
-            .baseUrl("http://tuapkmovil.125mb.com/api/")
+            .baseUrl("http://tuapkmovil.125mb.com/")
             .addConverterFactory(GsonConverterFactory.create())
             .client(getClient())
             .build()
