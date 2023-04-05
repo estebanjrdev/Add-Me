@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -44,13 +45,15 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
         initRecyclerView()
-
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(p0: String?): Boolean {
                 viewModel.getLiveDataObserver().observe(this@MainActivity, Observer {
                     println(it)
-                    adapter.setContacList(it)
-                    adapter.notifyDataSetChanged()
+                    if(it.isNotEmpty()){
+                    adapter.updateList(it)
+                    } else {
+                        Snackbar.make(binding.root, "No hay resultados", Snackbar.LENGTH_LONG).show()
+                    }
                 })
                 viewModel.search(p0!!)
                 return true
@@ -63,27 +66,27 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private inner class ContactItemClickListener : ContactAdapter.ContactAdapterListener {
-        override fun onContactSelected(contact: Contact) {
-            //listener
-        }
+    fun openLink(url: String){
+        val intent = Intent(Intent.ACTION_VIEW,Uri.parse(url))
+        startActivity(intent)
+    }
+
+    fun onItemSelected(contact: Contact){
+
     }
 
     fun initRecyclerView() {
         binding.recyclerContact.layoutManager = LinearLayoutManager(this)
-         var listempty: List<Contact> = emptyList()
-        adapter = ContactAdapter(listempty, ContactItemClickListener())
+        adapter = ContactAdapter{contact-> onItemSelected(contact)}
         binding.recyclerContact.adapter = adapter
         viewModel.getLiveDataObserver().observe(this, Observer {
-            adapter.setContacList(it)
-            adapter.notifyDataSetChanged()
+            adapter.updateList(it)
         })
         viewModel.getAllContact()
 
     }
 
     fun checkForInternet(context: Context): Boolean {
-
         val connectivityManager =
             context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -178,14 +181,14 @@ class MainActivity : AppCompatActivity() {
                 alertdialog.setView(addContactBinding.root)
                 addContactBinding.btnAddContact.setOnClickListener(View.OnClickListener {
                    viewModel.add(addContactBinding.name.text.toString(),addContactBinding.whatsapp.text.toString(),addContactBinding.instagram.text.toString(),addContactBinding.facebook.text.toString())
-                    viewModel.getisSuccefull().observe(this, Observer {
+                    viewModel.succefull().observe(this, Observer {
                         if (it.isNotEmpty()){
                             Snackbar.make(binding.root, "Contacto Agregado", Snackbar.LENGTH_LONG).show()
                         } else {
                             Snackbar.make(binding.root, "Contacto No Agregado", Snackbar.LENGTH_LONG).show()
                         }
                     })
-                    viewModel.getisSuccefull()
+                    viewModel.succefull()
                 })
                 alertdialog.show()
             }
