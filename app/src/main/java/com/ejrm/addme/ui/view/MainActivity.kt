@@ -1,5 +1,6 @@
 package com.ejrm.addme.ui.view
 
+import android.Manifest
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -14,6 +15,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.SearchView
+import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
 import androidx.lifecycle.Observer
@@ -48,7 +50,6 @@ class MainActivity : AppCompatActivity() {
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(p0: String?): Boolean {
                 viewModel.getLiveDataObserver().observe(this@MainActivity, Observer {
-                   /// println(it)
                     if(it.isNotEmpty()){
                     adapter.updateList(it)
                     } else {
@@ -60,7 +61,10 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onQueryTextChange(p0: String?): Boolean {
-                return false
+                if(p0.equals("")){
+                    initRecyclerView()
+                }
+                return true
             }
         })
 
@@ -106,6 +110,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @RequiresPermission(anyOf = [Manifest.permission.ACCESS_NETWORK_STATE, Manifest.permission.INTERNET])
     suspend fun dataConexion(url: String): Boolean {
         delay(1500)
         val httpConnection: HttpURLConnection =
