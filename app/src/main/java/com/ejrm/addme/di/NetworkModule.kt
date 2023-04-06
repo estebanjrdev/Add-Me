@@ -18,13 +18,12 @@ object NetworkModule {
 
     @Singleton
     @Provides
-    fun provideRetrofit():Retrofit{
-        return Retrofit.Builder()
-            .baseUrl("http://tuapkmovil.125mb.com/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .client(getClient())
-            .build()
-    }
+    fun provideRetrofit(): Retrofit = Retrofit.Builder()
+        .baseUrl("http://tuapkmovil.125mb.com/")
+        .addConverterFactory(GsonConverterFactory.create())
+        .client(getClient())
+        .build()
+
 
     fun getClient(): OkHttpClient {
         val interceptor = HttpLoggingInterceptor()
@@ -39,7 +38,7 @@ object NetworkModule {
 
     @Singleton
     @Provides
-    fun provideContactApiClient(retrofit: Retrofit): ContactApiClient {
-        return retrofit.create(ContactApiClient::class.java)
-    }
+    fun provideContactApiClient(retrofit: Retrofit): ContactApiClient =
+        retrofit.create(ContactApiClient::class.java)
+
 }
