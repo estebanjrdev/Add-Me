@@ -25,7 +25,7 @@ object NetworkModule {
         .build()
 
 
-    fun getClient(): OkHttpClient {
+    private fun getClient(): OkHttpClient {
         val interceptor = HttpLoggingInterceptor()
         interceptor.level = HttpLoggingInterceptor.Level.HEADERS
         interceptor.level = HttpLoggingInterceptor.Level.BODY
