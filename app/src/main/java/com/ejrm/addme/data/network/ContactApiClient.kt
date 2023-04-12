@@ -17,6 +17,7 @@ interface ContactApiClient {
     @FormUrlEncoded
     @POST("/api/add/index.php")
     suspend fun addContact(
+        @Field("image") image: String,
         @Field("name") name: String,
         @Field("phone") phone: String,
         @Field("instagram") instagram: String,

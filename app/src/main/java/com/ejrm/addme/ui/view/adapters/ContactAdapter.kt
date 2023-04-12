@@ -12,11 +12,10 @@ import com.ejrm.addme.databinding.CardItemRecyclerBinding
 
 
 class ContactAdapter(
-    private var contactList: List<Contact> = emptyList(),
     private val onClickListener: (Contact) -> Unit
 ) :
     RecyclerView.Adapter<ContactViewHolder>() {
-
+    private var contactList = listOf<Contact>()
     fun updateList(list: List<Contact>) {
         contactList = list
         notifyDataSetChanged()

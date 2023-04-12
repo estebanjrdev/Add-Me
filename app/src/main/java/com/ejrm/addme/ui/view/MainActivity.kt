@@ -5,18 +5,22 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.MediaStore
+import android.util.Base64
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.SearchView
 import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -30,30 +34,41 @@ import com.ejrm.addme.ui.viewmodel.MainViewModel
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
+import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 import java.sql.DriverManager.println
+import java.util.*
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
+    private lateinit var addContactBinding: AddContactBinding
+    lateinit var baos: ByteArrayOutputStream
     lateinit var viewModel: MainViewModel
     lateinit var contact: Contact
+    lateinit var bitmap: Bitmap
     private lateinit var adapter: ContactAdapter
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
         initRecyclerView()
+        bitmap = BitmapFactory.decodeResource(this.resources,R.drawable.ic_person_24)
+        viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
+        viewModel.getLiveDataObserver().observe(this@MainActivity, Observer {
+            adapter.updateList(it)
+        })
+        viewModel.getAllContact()
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(p0: String?): Boolean {
                 viewModel.getLiveDataObserver().observe(this@MainActivity, Observer {
-                    if(it.isNotEmpty()){
-                    adapter.updateList(it)
+                    if (it.isNotEmpty()) {
+                        adapter.updateList(it)
                     } else {
-                        Snackbar.make(binding.root, "No hay resultados", Snackbar.LENGTH_LONG).show()
+                        Snackbar.make(binding.root, "No hay resultados", Snackbar.LENGTH_LONG)
+                            .show()
                     }
                 })
                 viewModel.search(p0!!)
@@ -61,7 +76,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onQueryTextChange(p0: String?): Boolean {
-                if(p0.equals("")){
+                if (p0.equals("")) {
                     initRecyclerView()
                 }
                 return true
@@ -70,24 +85,19 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun openLink(url: String){
-        val intent = Intent(Intent.ACTION_VIEW,Uri.parse(url))
+    fun openLink(url: String) {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
         startActivity(intent)
     }
 
-    fun onItemSelected(contact: Contact){
+    fun onItemSelected(contact: Contact) {
 
     }
 
     fun initRecyclerView() {
         binding.recyclerContact.layoutManager = LinearLayoutManager(this)
-        adapter = ContactAdapter{contact-> onItemSelected(contact)}
+        adapter = ContactAdapter { contact -> onItemSelected(contact) }
         binding.recyclerContact.adapter = adapter
-        viewModel.getLiveDataObserver().observe(this, Observer {
-            adapter.updateList(it)
-        })
-        viewModel.getAllContact()
-
     }
 
     fun checkForInternet(context: Context): Boolean {
@@ -132,12 +142,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        initRecyclerView()
         registerReceiver(estadoRed, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
     }
 
     private val estadoRed = object : BroadcastReceiver() {
         override fun onReceive(p0: Context?, p1: Intent?) {
-            initRecyclerView()
+
             if (checkForInternet(baseContext)) {
                 GlobalScope.launch(Dispatchers.Main) {
                     var response =
@@ -180,24 +191,62 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.add -> {
-                val addContactBinding = AddContactBinding.inflate(layoutInflater)
+                addContactBinding = AddContactBinding.inflate(layoutInflater)
                 val alertdialog = AlertDialog.Builder(this)
-                alertdialog.setTitle("Contacto")
+                alertdialog.setTitle("Add Contacto")
                 alertdialog.setView(addContactBinding.root)
+                addContactBinding.imgPerfil.setOnClickListener {
+                    val intent = Intent()
+                        .setType("image/*")
+                        .setAction(Intent.ACTION_GET_CONTENT)
+
+                    startActivityForResult(Intent.createChooser(intent, "Selecciona una Imagen"), 111)
+                }
                 addContactBinding.btnAddContact.setOnClickListener(View.OnClickListener {
-                   viewModel.add(addContactBinding.name.text.toString(),addContactBinding.whatsapp.text.toString(),addContactBinding.instagram.text.toString(),addContactBinding.facebook.text.toString())
-                    viewModel.succefull().observe(this, Observer {
-                        if (it.isNotEmpty()){
-                            Snackbar.make(binding.root, "Contacto Agregado", Snackbar.LENGTH_LONG).show()
+                    viewModel.add(
+                        getStringImage(bitmap),
+                        addContactBinding.name.text.toString(),
+                        addContactBinding.whatsapp.text.toString(),
+                        addContactBinding.instagram.text.toString(),
+                        addContactBinding.facebook.text.toString()
+                    )
+                    viewModel.getSuccessfulObserver().observe(this, Observer {
+                        if (it.isNotEmpty()) {
+                            Snackbar.make(binding.root, "Contacto Agregado", Snackbar.LENGTH_LONG)
+                                .show()
                         } else {
-                            Snackbar.make(binding.root, "Contacto No Agregado", Snackbar.LENGTH_LONG).show()
+                            Snackbar.make(
+                                binding.root,
+                                "Contacto No Agregado",
+                                Snackbar.LENGTH_LONG
+                            ).show()
                         }
                     })
-                    viewModel.succefull()
+                    viewModel.getSuccessfulObserver()
                 })
                 alertdialog.show()
             }
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    fun getStringImage(bitmap: Bitmap): String {
+       bitmap.compress(Bitmap.CompressFormat.JPEG,100,baos)
+        val array: ByteArray = baos.toByteArray()
+        return Base64.encodeToString(array,Base64.DEFAULT)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 111 && resultCode == RESULT_OK && data != null && data.data != null) {
+            var filePath: Uri = data.data!!
+            try {
+                val foto = MediaStore.Images.Media.getBitmap(getContentResolver(), filePath)
+                 bitmap  = Bitmap.createScaledBitmap(foto, 150, 150, true)
+                addContactBinding.imgPerfil.setImageBitmap(bitmap)
+            } catch (e: IOException){
+
+            }
+        }
     }
 }

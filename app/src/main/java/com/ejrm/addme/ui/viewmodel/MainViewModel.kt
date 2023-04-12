@@ -12,18 +12,20 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(private val getContactDomain: CrudContact) : ViewModel() {
-    private var livedatalist: MutableLiveData<List<Contact>> = MutableLiveData()
-    val isSuccefull: MutableLiveData<List<ContactResponse>> = MutableLiveData()
+    private var _livedatalist: MutableLiveData<List<Contact>> = MutableLiveData(listOf())
+    val livedatalist: MutableLiveData<List<Contact>> = _livedatalist
+    val isSuccessfull: MutableLiveData<List<ContactResponse>> = MutableLiveData()
 
     fun getLiveDataObserver(): MutableLiveData<List<Contact>> = livedatalist
-    fun succefull(): MutableLiveData<List<ContactResponse>> = isSuccefull
+    fun getSuccessfulObserver(): MutableLiveData<List<ContactResponse>> = isSuccessfull
 
     fun getAllContact() {
         viewModelScope.launch {
             val contacts = getContactDomain.invoke()
-            livedatalist.postValue(contacts)
+            _livedatalist.postValue(contacts)
         }
     }
+
     fun search(search: String) {
         viewModelScope.launch {
             val contacts = getContactDomain.invokeSearch(search)
@@ -31,10 +33,11 @@ class MainViewModel @Inject constructor(private val getContactDomain: CrudContac
             livedatalist.postValue(contacts)
         }
     }
-    fun add(name: String, phone: String, instagram: String, facebook: String) {
+
+    fun add(image:String, name: String, phone: String, instagram: String, facebook: String) {
         viewModelScope.launch {
-            val Succefull = getContactDomain.invokeAdd(name,phone,instagram,facebook)
-            isSuccefull.postValue(Succefull)
+            val Succefull = getContactDomain.invokeAdd(image, name, phone, instagram, facebook)
+            isSuccessfull.postValue(Succefull)
         }
     }
 }
