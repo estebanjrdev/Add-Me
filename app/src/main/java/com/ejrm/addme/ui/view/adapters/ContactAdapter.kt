@@ -26,7 +26,6 @@ class ContactAdapter(
         return ContactViewHolder(layoutInflater.inflate(R.layout.card_item_recycler, parent, false))
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(holder: ContactViewHolder, position: Int) {
         holder.bind(contactList[position], onClickListener)
     }

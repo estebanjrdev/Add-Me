@@ -4,6 +4,7 @@ import com.ejrm.addme.data.model.Contact
 import com.ejrm.addme.data.model.ContactResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.MultipartBody
 import java.util.Collections.emptyList
 import javax.inject.Inject
 
@@ -21,9 +22,9 @@ class ContactService @Inject constructor(private val api: ContactApiClient) {
             response.body() ?: emptyList()
         }
     }
-    suspend fun addContact(image:String, name: String, phone: String, instagram: String, facebook: String): List<ContactResponse> {
+    suspend fun addContact(name: String, phone: String, instagram: String, facebook: String): List<ContactResponse> {
         return withContext(Dispatchers.IO) {
-            val response = api.addContact(image, name,phone,instagram,facebook)
+            val response = api.addContact(name,phone,instagram,facebook)
             response.body() ?: emptyList()
         }
     }

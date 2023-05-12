@@ -1,53 +1,96 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/linearLayout2"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
-    <ImageView
+    <ProgressBar
+        android:id="@+id/progress"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:elevation="20dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+   <!-- <ImageView
         android:id="@+id/img_perfil"
-        android:layout_width="150dp"
-        android:layout_height="150dp"
-        android:layout_marginTop="10dp"
-        android:layout_gravity="center"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
         android:clickable="true"
-        android:tooltipText="Foto Contacto"
         android:src="@drawable/ic_person_24"
-        tools:ignore="ContentDescription" />
+        android:tooltipText="Foto Contacto"
+        app:layout_constraintVertical_bias="0.1"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ContentDescription" /> -->
+
     <EditText
         android:id="@+id/name"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="20dp"
-        android:layout_marginTop="10dp"
+        android:layout_marginLeft="20dp"
         android:layout_marginEnd="20dp"
-        android:hint="Nombre" />
+        android:layout_marginTop="10dp"
+        android:layout_marginRight="20dp"
+        app:layout_constraintVertical_bias="0.1"
+        android:hint="Nombre"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
     <EditText
         android:id="@+id/whatsapp"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="20dp"
+        android:layout_marginLeft="20dp"
         android:layout_marginTop="10dp"
         android:layout_marginEnd="20dp"
+        android:layout_marginRight="20dp"
         android:hint="WhatsApp"
-        android:inputType="number"/>
+        android:inputType="number"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/name" />
+
     <EditText
         android:id="@+id/instagram"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="20dp"
+        android:layout_marginLeft="20dp"
         android:layout_marginTop="10dp"
         android:layout_marginEnd="20dp"
-        android:hint="Instagram" />
+        android:layout_marginRight="20dp"
+        android:hint="Instagram"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/whatsapp" />
+
     <EditText
         android:id="@+id/facebook"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="20dp"
+        android:layout_marginLeft="20dp"
         android:layout_marginTop="10dp"
         android:layout_marginEnd="20dp"
-        android:hint="Facebook"/>
+        android:layout_marginRight="20dp"
+        android:hint="Facebook"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/instagram" />
+
     <Button
         android:id="@+id/btnAddContact"
         style="@style/Widget.AppCompat.Button.Colored"
@@ -55,9 +98,12 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="20dp"
         android:layout_marginTop="10dp"
-        android:layout_marginBottom="10dp"
+        android:layout_marginBottom="20dp"
         android:layout_marginEnd="20dp"
         android:background="@drawable/boton"
         android:text="Agregar Contacto"
-        android:textColor="#FFFFFF" />
-</LinearLayout>
+        android:textColor="#FFFFFF"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/facebook" />
+</androidx.constraintlayout.widget.ConstraintLayout>
