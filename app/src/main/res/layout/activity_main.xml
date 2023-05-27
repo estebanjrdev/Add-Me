@@ -26,7 +26,7 @@
             android:queryBackground="@color/transparent"
             android:queryHint="Buscar Contacto"
             android:searchHintIcon="@null"
-            android:searchIcon="@null" />
+            android:searchIcon="@drawable/ic_search_24" />
 
     </com.google.android.material.card.MaterialCardView>
 
@@ -61,6 +61,15 @@
         </androidx.appcompat.widget.LinearLayoutCompat>
     </com.facebook.shimmer.ShimmerFrameLayout>
 
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:id="@+id/swipe"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/mcv_search_view">
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_contact"
         android:layout_width="match_parent"
@@ -70,6 +79,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/mcv_search_view"/>
+        app:layout_constraintTop_toBottomOf="@+id/swipe"/>
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

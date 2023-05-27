@@ -32,6 +32,7 @@ import com.ejrm.addme.databinding.AddContactBinding
 import com.ejrm.addme.ui.view.adapters.ContactAdapter
 import com.ejrm.addme.ui.viewmodel.MainViewModel
 import com.google.android.material.snackbar.Snackbar
+import com.hbb20.CountryCodePicker
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -43,39 +44,32 @@ import java.net.URL
 import java.sql.DriverManager.println
 import java.time.LocalDateTime
 import java.util.*
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var addContactBinding: AddContactBinding
-    lateinit var baos: ByteArrayOutputStream
     lateinit var viewModel: MainViewModel
-    lateinit var contact: Contact
-    lateinit var bitmap: Bitmap
-    private var imageUri: Uri? = null
     var dialog: AlertDialog? = null
     private lateinit var adapter: ContactAdapter
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         initRecyclerView()
-       // bitmap = BitmapFactory.decodeResource(this.resources,R.drawable.ic_person_24)
-        viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
-        viewModel.getLiveDataObserver().observe(this@MainActivity, Observer {
-           // if (it.isNotEmpty()) {
-                adapter.updateList(it)
-           /* } else {
-                Snackbar.make(binding.root, "No Contactos", Snackbar.LENGTH_LONG)
-                    .show()
-            }*/
-        })
-        viewModel.getAllContact()
+        initViewModel()
+        binding.swipe.setOnRefreshListener {
+            initViewModel()
+            binding.swipe.isRefreshing = false
+        }
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(p0: String?): Boolean {
-                viewModel.getLiveDataObserver().observe(this@MainActivity, Observer {
-                    if (it.isNotEmpty()) {
+                viewModel.livedatalist.observe(this@MainActivity, Observer {
+                    if (it != null) {
                         adapter.updateList(it)
+                        adapter.notifyDataSetChanged()
                     } else {
                         Snackbar.make(binding.root, "No hay resultados", Snackbar.LENGTH_LONG)
                             .show()
@@ -87,12 +81,26 @@ class MainActivity : AppCompatActivity() {
 
             override fun onQueryTextChange(p0: String?): Boolean {
                 if (p0.equals("")) {
-                    initRecyclerView()
+                    initViewModel()
                 }
                 return true
             }
         })
+    }
 
+    fun initRecyclerView() {
+        binding.recyclerContact.layoutManager = LinearLayoutManager(this)
+        adapter = ContactAdapter { contact -> onItemSelected(contact) }
+        binding.recyclerContact.adapter = adapter
+    }
+
+    fun initViewModel(){
+        viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
+        viewModel.livedatalist.observe(this@MainActivity, Observer {
+            adapter.updateList(it)
+            adapter.notifyDataSetChanged()
+        })
+        viewModel.getAllContact()
     }
 
     fun openLink(url: String) {
@@ -104,11 +112,6 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun initRecyclerView() {
-        binding.recyclerContact.layoutManager = LinearLayoutManager(this)
-        adapter = ContactAdapter { contact -> onItemSelected(contact) }
-        binding.recyclerContact.adapter = adapter
-    }
     fun Context.checkForInternet(): Boolean {
         val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -180,13 +183,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        initRecyclerView()
         registerReceiver(estadoRed, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
     }
 
     private val estadoRed = object : BroadcastReceiver() {
         override fun onReceive(p0: Context?, p1: Intent?) {
-
+          //  initRecyclerView()
+          //  initViewModel()
             if (checkForInternet()) {
                 GlobalScope.launch(Dispatchers.Main) {
                     var response =
@@ -234,15 +237,21 @@ class MainActivity : AppCompatActivity() {
                 val alertdialog = AlertDialog.Builder(this)
                 alertdialog.setTitle("Add Contacto")
                 alertdialog.setView(addContactBinding.root)
-               /* addContactBinding.imgPerfil.setOnClickListener {
-                    checkPermissionAndOpenImageSelector()
-                }*/
+                addContactBinding.CodeCountry.registerCarrierNumberEditText(addContactBinding.whatsapp)
                 addContactBinding.btnAddContact.setOnClickListener {
-                    addContactBinding.progress.isVisible = true
-                    viewModel.add(addContactBinding.name.text.toString(),
-                        addContactBinding.whatsapp.text.toString(),
-                        addContactBinding.instagram.text.toString(),
-                        addContactBinding.facebook.text.toString())
+                    val phoneNumber = addContactBinding.CodeCountry.fullNumberWithPlus.toString()
+                 if ( addContactBinding.CodeCountry.isValidFullNumber){
+                     Snackbar.make(binding.root, phoneNumber, Snackbar.LENGTH_LONG)
+                         .show()
+                     addContactBinding.progress.isVisible = true
+                     viewModel.add(addContactBinding.name.text.toString(),
+                         phoneNumber,
+                         addContactBinding.instagram.text.toString(),
+                         addContactBinding.facebook.text.toString())
+                 } else {
+                     Snackbar.make(binding.root, "Teléfono Incorrecto", Snackbar.LENGTH_LONG)
+                         .show()
+                 }
                     viewModel.getSuccessfulObserver().observe(this, Observer {
                         if (it.isNotEmpty()) {
                             addContactBinding.progress.isVisible = false
@@ -259,6 +268,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     })
                     viewModel.getSuccessfulObserver()
+                    viewModel.getAllContact()
                 }
                 dialog = alertdialog.create()
                 dialog!!.show()

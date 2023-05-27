@@ -16,10 +16,9 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(private val getContactDomain: CrudContact) : ViewModel() {
 
     private val _livedatalist = MutableLiveData<List<Contact>>()
-    val livedatalist: MutableLiveData<List<Contact>> get() = _livedatalist
-    val isSuccessfull: MutableLiveData<List<ContactResponse>> = MutableLiveData()
+    val livedatalist: LiveData<List<Contact>> = _livedatalist
+    val isSuccessfull = MutableLiveData<List<ContactResponse>>()
 
-    fun getLiveDataObserver(): MutableLiveData<List<Contact>> = livedatalist
     fun getSuccessfulObserver(): MutableLiveData<List<ContactResponse>> = isSuccessfull
 
     fun getAllContact() {
@@ -32,8 +31,7 @@ class MainViewModel @Inject constructor(private val getContactDomain: CrudContac
     fun search(search: String) {
         viewModelScope.launch {
             val contacts = getContactDomain.invokeSearch(search)
-            println(contacts)
-            livedatalist.postValue(contacts)
+            _livedatalist.postValue(contacts)
         }
     }
 

@@ -18,7 +18,7 @@ class ContactAdapter(
     private var contactList = listOf<Contact>()
     fun updateList(list: List<Contact>) {
         contactList = list
-        notifyDataSetChanged()
+        //notifyDataSetChanged()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ContactViewHolder {
