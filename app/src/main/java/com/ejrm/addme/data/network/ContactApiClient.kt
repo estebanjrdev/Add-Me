@@ -20,6 +20,7 @@ interface ContactApiClient {
     suspend fun addContact(
       //  @Part image: MultipartBody.Part,
        @Field("name") name: String,
+       @Field("country") country: String,
        @Field("phone") phone: String,
        @Field("instagram") instagram: String,
        @Field("facebook") facebook: String

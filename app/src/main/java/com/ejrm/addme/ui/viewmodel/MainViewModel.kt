@@ -35,9 +35,9 @@ class MainViewModel @Inject constructor(private val getContactDomain: CrudContac
         }
     }
 
-    fun add(name: String, phone: String, instagram: String, facebook: String) {
+    fun add(name: String, country:String, phone: String, instagram: String, facebook: String) {
         viewModelScope.launch {
-            val Succefull = getContactDomain.invokeAdd(name, phone, instagram, facebook)
+            val Succefull = getContactDomain.invokeAdd(name,country, phone, instagram, facebook)
             isSuccessfull.postValue(Succefull)
         }
     }

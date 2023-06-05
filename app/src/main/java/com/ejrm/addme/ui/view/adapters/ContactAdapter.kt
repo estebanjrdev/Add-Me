@@ -12,13 +12,15 @@ import com.ejrm.addme.databinding.CardItemRecyclerBinding
 
 
 class ContactAdapter(
-    private val onClickListener: (Contact) -> Unit
+    private val onClickListener: (Contact) -> Unit,
+    private val onClickWhatsapp: (String) -> Unit,
+    private val onClickInstagram: (String) -> Unit,
+    private val onClickFacebook: (String) -> Unit
 ) :
     RecyclerView.Adapter<ContactViewHolder>() {
     private var contactList = listOf<Contact>()
     fun updateList(list: List<Contact>) {
         contactList = list
-        //notifyDataSetChanged()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ContactViewHolder {
@@ -27,7 +29,7 @@ class ContactAdapter(
     }
 
     override fun onBindViewHolder(holder: ContactViewHolder, position: Int) {
-        holder.bind(contactList[position], onClickListener)
+        holder.bind(contactList[position],onClickListener,onClickWhatsapp,onClickInstagram,onClickFacebook)
     }
 
     override fun getItemCount(): Int = contactList.size

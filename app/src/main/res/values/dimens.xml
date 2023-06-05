@@ -4,7 +4,7 @@
     <dimen name="margin_normal">12dp</dimen>
     <dimen name="margin_small">8dp</dimen>
 
-    <dimen name="common_radius">10dp</dimen>
+    <dimen name="common_radius">100dp</dimen>
     <dimen name="common_elevation">8dp</dimen>
     <dimen name="search_view_radius">20dp</dimen>
 

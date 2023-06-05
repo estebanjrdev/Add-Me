@@ -22,9 +22,9 @@ class ContactService @Inject constructor(private val api: ContactApiClient) {
             response.body() ?: emptyList()
         }
     }
-    suspend fun addContact(name: String, phone: String, instagram: String, facebook: String): List<ContactResponse> {
+    suspend fun addContact(name: String, country:String, phone: String, instagram: String, facebook: String): List<ContactResponse> {
         return withContext(Dispatchers.IO) {
-            val response = api.addContact(name,phone,instagram,facebook)
+            val response = api.addContact(name,country,phone,instagram,facebook)
             response.body() ?: emptyList()
         }
     }

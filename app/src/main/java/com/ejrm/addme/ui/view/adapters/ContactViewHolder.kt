@@ -1,11 +1,14 @@
 package com.ejrm.addme.ui.view.adapters
 
+import android.content.Intent
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Build
 import android.util.Base64
 import android.view.View
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.ejrm.addme.data.model.Contact
 import com.ejrm.addme.databinding.CardItemRecyclerBinding
@@ -15,11 +18,18 @@ class ContactViewHolder(view: View) : RecyclerView.ViewHolder(view) {
     val emisoraCardBinding = CardItemRecyclerBinding.bind(view)
 
 
-    fun bind(contact: Contact, onClickListener: (Contact) -> Unit) {
+    fun bind(
+        contact: Contact,
+        onClickListener: (Contact) -> Unit,
+        onClickWhatsapp: (String) -> Unit,
+        onClickInstagram: (String) -> Unit,
+        onClickFacebook: (String) -> Unit
+    ) {
         emisoraCardBinding.txtName.text = contact.name
-        emisoraCardBinding.btnWhatsApp.setOnClickListener { Toast.makeText(itemView.context,contact.phone,Toast.LENGTH_SHORT).show() }
-        emisoraCardBinding.btnInstagram.setOnClickListener { Toast.makeText(itemView.context,contact.instagram,Toast.LENGTH_SHORT).show() }
-        emisoraCardBinding.btnFacebook.setOnClickListener { Toast.makeText(itemView.context,contact.facebook,Toast.LENGTH_SHORT).show() }
+        emisoraCardBinding.CodeCountry.setCountryForPhoneCode(contact.country.toInt())
+        emisoraCardBinding.btnWhatsApp.setOnClickListener { onClickWhatsapp(contact.phone) }
+        emisoraCardBinding.btnInstagram.setOnClickListener { onClickInstagram(contact.instagram) }
+        emisoraCardBinding.btnFacebook.setOnClickListener { onClickFacebook(contact.facebook) }
         itemView.setOnClickListener { onClickListener(contact) }
     }
 }

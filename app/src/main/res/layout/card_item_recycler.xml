@@ -7,7 +7,7 @@
     android:layout_marginHorizontal="@dimen/margin_normal"
     android:layout_marginVertical="@dimen/margin_small"
     android:padding="@dimen/margin_small"
-    app:cardCornerRadius="@dimen/common_radius"
+    app:cardCornerRadius="10dp"
     app:cardElevation="@dimen/common_elevation">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -24,12 +24,13 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-            <ImageView
-                android:id="@+id/img_person"
+            <com.hbb20.CountryCodePicker
+                android:id="@+id/CodeCountry"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:src="@drawable/ic_person_24"
-                tools:ignore="ContentDescription" />
+                android:layout_marginStart="13dp"
+                app:ccp_clickable="false"
+                app:ccp_showArrow="false"/>
 
         </com.google.android.material.card.MaterialCardView>
 
