@@ -90,7 +90,7 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    fun initRecyclerView() {
+    private fun initRecyclerView() {
         binding.recyclerContact.layoutManager = LinearLayoutManager(this)
         adapter = ContactAdapter(
             onClickListener = { contact -> onItemSelected(contact) },
@@ -103,30 +103,38 @@ class MainActivity : AppCompatActivity() {
     fun initViewModel() {
         viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
         viewModel.livedatalist.observe(this@MainActivity, Observer {
-            adapter.updateList(it)
-            adapter.notifyDataSetChanged()
+            if (it.isNotEmpty()) {
+                adapter.updateList(it)
+                adapter.notifyDataSetChanged()
+            }else{
+                Snackbar.make(
+                    binding.root,
+                    "No hay contactos",
+                    Snackbar.LENGTH_INDEFINITE
+                ).show()
+            }
         })
         viewModel.getAllContact()
     }
 
-    fun openLink(url: String) {
+    private fun openLink(url: String) {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
         startActivity(intent)
     }
 
-    fun onItemSelected(contact: Contact) {
+    private fun onItemSelected(contact: Contact) {
 
     }
 
-    fun onClickWhatsapp(whatsapp: String) {
+    private fun onClickWhatsapp(whatsapp: String) {
         openLink("https://wa.me/$whatsapp?text=Hola%20vengo%20desde%20AddMe%20la%20aplicación,%20agregame%20para%20ver%20estados.")
     }
 
-    fun onClickInstagram(instagram: String) {
+    private fun onClickInstagram(instagram: String) {
         openLink("https://www.instagram.com/$instagram")
     }
 
-    fun onClickFacebook(facebook: String) {
+    private fun onClickFacebook(facebook: String) {
         openLink("https://www.facebook.com/$facebook")
     }
 
@@ -270,7 +278,8 @@ class MainActivity : AppCompatActivity() {
                                 country,
                                 phoneNumber,
                                 addContactBinding.instagram.text.toString(),
-                                addContactBinding.facebook.text.toString()
+                                addContactBinding.facebook.text.toString(),
+                                addContactBinding.password.text.toString()
                             )
                         } else {
                             Snackbar.make(binding.root, "Teléfono Incorrecto", Snackbar.LENGTH_LONG)

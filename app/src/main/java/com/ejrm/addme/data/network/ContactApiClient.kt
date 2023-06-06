@@ -14,15 +14,14 @@ interface ContactApiClient {
     @GET("/api/search/index.php")
     suspend fun searchContact(@Query("search") search: String): Response<List<Contact>>
 
-   // @Multipart
     @FormUrlEncoded
     @POST("/api/add/index.php")
     suspend fun addContact(
-      //  @Part image: MultipartBody.Part,
-       @Field("name") name: String,
-       @Field("country") country: String,
-       @Field("phone") phone: String,
-       @Field("instagram") instagram: String,
-       @Field("facebook") facebook: String
+        @Field("name") name: String,
+        @Field("country") country: String,
+        @Field("phone") phone: String,
+        @Field("instagram") instagram: String,
+        @Field("facebook") facebook: String,
+        @Field("password") password: String
     ): Response<List<ContactResponse>>
 }
