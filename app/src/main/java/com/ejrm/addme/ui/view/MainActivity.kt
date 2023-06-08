@@ -28,6 +28,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.ejrm.addme.R
 import com.ejrm.addme.data.model.Contact
+import com.ejrm.addme.data.model.ContactResponse
 import com.ejrm.addme.databinding.ActivityMainBinding
 import com.ejrm.addme.databinding.AddContactBinding
 import com.ejrm.addme.ui.view.adapters.ContactAdapter
@@ -103,16 +104,8 @@ class MainActivity : AppCompatActivity() {
     fun initViewModel() {
         viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
         viewModel.livedatalist.observe(this@MainActivity, Observer {
-            if (it.isNotEmpty()) {
-                adapter.updateList(it)
-                adapter.notifyDataSetChanged()
-            }else{
-                Snackbar.make(
-                    binding.root,
-                    "No hay contactos",
-                    Snackbar.LENGTH_INDEFINITE
-                ).show()
-            }
+            adapter.updateList(it)
+            adapter.notifyDataSetChanged()
         })
         viewModel.getAllContact()
     }
@@ -215,8 +208,6 @@ class MainActivity : AppCompatActivity() {
 
     private val estadoRed = object : BroadcastReceiver() {
         override fun onReceive(p0: Context?, p1: Intent?) {
-            //  initRecyclerView()
-            //  initViewModel()
             if (checkForInternet()) {
                 GlobalScope.launch(Dispatchers.Main) {
                     var response =
@@ -262,17 +253,61 @@ class MainActivity : AppCompatActivity() {
             R.id.add -> {
                 addContactBinding = AddContactBinding.inflate(layoutInflater)
                 val alertdialog = AlertDialog.Builder(this)
-                alertdialog.setTitle("Add Contacto")
+                alertdialog.setTitle("Add Me")
                 alertdialog.setView(addContactBinding.root)
+                addContactBinding.login.setOnClickListener(View.OnClickListener {
+                    addContactBinding.name.isVisible = false
+                    addContactBinding.instagram.isVisible = false
+                    addContactBinding.facebook.isVisible = false
+                    addContactBinding.btnAddContact.isVisible = false
+                    addContactBinding.btnloginContact.isVisible = true
+                })
                 addContactBinding.CodeCountry.registerCarrierNumberEditText(addContactBinding.whatsapp)
-                addContactBinding.btnAddContact.setOnClickListener {
-                    if (addContactBinding.name.text.toString() != "" || addContactBinding.whatsapp.text.toString() != "") {
-                        val phoneNumber =
-                            addContactBinding.CodeCountry.fullNumber.toString()
-                        val country = addContactBinding.CodeCountry.selectedCountryCode
-                        Log.d("country", country)
+
+                addContactBinding.btnloginContact.setOnClickListener {
+                    if (addContactBinding.whatsapp.text.toString() != "" || addContactBinding.password.text.toString() != "") {
                         if (addContactBinding.CodeCountry.isValidFullNumber) {
                             addContactBinding.progress.isVisible = true
+                            val phoneNumber = addContactBinding.CodeCountry.fullNumber.toString()
+                            val country = addContactBinding.CodeCountry.selectedCountryCode
+                            Snackbar.make(binding.root, phoneNumber, Snackbar.LENGTH_LONG)
+                                .show()
+                            viewModel.loginViewModel(
+                                phoneNumber,
+                                addContactBinding.password.text.toString()
+                            )
+                        } else {
+                            Snackbar.make(binding.root, "Teléfono Incorrecto", Snackbar.LENGTH_LONG)
+                                .show()
+                        }
+                        viewModel.getSuccessfulObserver().observe(this, Observer {
+                            val response: ContactResponse = it[0]
+                            addContactBinding.progress.isVisible = false
+                            Snackbar.make(
+                                binding.root,
+                                response.message,
+                                Snackbar.LENGTH_LONG
+                            )
+                                .show()
+                            dialog!!.dismiss()
+                        })
+                        viewModel.getSuccessfulObserver()
+                        viewModel.getAllContact()
+                    } else {
+                        Snackbar.make(
+                            binding.root,
+                            "El teléfono y contraseña son obligatorios",
+                            Snackbar.LENGTH_LONG
+                        ).show()
+                    }
+
+                }
+                addContactBinding.btnAddContact.setOnClickListener {
+                    if (addContactBinding.name.text.toString() != "" || addContactBinding.whatsapp.text.toString() != "" || addContactBinding.password.text.toString() != "") {
+                        if (addContactBinding.CodeCountry.isValidFullNumber) {
+                            addContactBinding.progress.isVisible = true
+                            val phoneNumber = addContactBinding.CodeCountry.fullNumber.toString()
+                            val country = addContactBinding.CodeCountry.selectedCountryCode
                             viewModel.add(
                                 addContactBinding.name.text.toString(),
                                 country,
@@ -286,30 +321,22 @@ class MainActivity : AppCompatActivity() {
                                 .show()
                         }
                         viewModel.getSuccessfulObserver().observe(this, Observer {
-                            if (it.isNotEmpty()) {
-                                addContactBinding.progress.isVisible = false
-                                Snackbar.make(
-                                    binding.root,
-                                    "Contacto Agregado",
-                                    Snackbar.LENGTH_LONG
-                                )
-                                    .show()
-                                dialog!!.dismiss()
-                            } else {
-                                Snackbar.make(
-                                    binding.root,
-                                    "Contacto No Agregado",
-                                    Snackbar.LENGTH_LONG
-                                ).show()
-                                dialog!!.dismiss()
-                            }
+                            val response: ContactResponse = it[0]
+                            addContactBinding.progress.isVisible = false
+                            Snackbar.make(
+                                binding.root,
+                                response.message,
+                                Snackbar.LENGTH_LONG
+                            )
+                                .show()
+                            dialog!!.dismiss()
                         })
                         viewModel.getSuccessfulObserver()
                         viewModel.getAllContact()
                     } else {
                         Snackbar.make(
                             binding.root,
-                            "El nombre y teléfono son obligatorios",
+                            "El nombre, teléfono y contraseña son obligatorios",
                             Snackbar.LENGTH_LONG
                         ).show()
                     }

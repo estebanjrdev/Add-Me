@@ -24,4 +24,11 @@ interface ContactApiClient {
         @Field("facebook") facebook: String,
         @Field("password") password: String
     ): Response<List<ContactResponse>>
+
+    @FormUrlEncoded
+    @POST("/api/login/index.php")
+    suspend fun loginApi(
+        @Field("phone") phone: String,
+        @Field("password") password: String
+    ): Response<List<ContactResponse>>
 }

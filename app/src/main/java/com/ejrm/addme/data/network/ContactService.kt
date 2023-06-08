@@ -28,4 +28,11 @@ class ContactService @Inject constructor(private val api: ContactApiClient) {
             response.body() ?: emptyList()
         }
     }
+
+    suspend fun loginService(phone: String, password: String): List<ContactResponse> {
+        return withContext(Dispatchers.IO) {
+            val response = api.loginApi(phone,password)
+            response.body() ?: emptyList()
+        }
+    }
 }

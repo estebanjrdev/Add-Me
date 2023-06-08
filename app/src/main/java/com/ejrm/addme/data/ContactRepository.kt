@@ -18,4 +18,7 @@ class ContactRepository @Inject constructor(
     suspend fun addContact(name: String, country:String, phone: String, instagram: String, facebook: String, password: String): List<ContactResponse> {
         return apiService.addContact(name,country,phone,instagram,facebook,password)
     }
+    suspend fun loginRepository(phone: String, password: String): List<ContactResponse> {
+        return apiService.loginService(phone,password)
+    }
 }

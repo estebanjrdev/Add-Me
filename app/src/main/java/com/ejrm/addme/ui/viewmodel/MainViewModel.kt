@@ -41,4 +41,11 @@ class MainViewModel @Inject constructor(private val getContactDomain: CrudContac
             isSuccessfull.postValue(Succefull)
         }
     }
+
+    fun loginViewModel(phone:String, password:String){
+        viewModelScope.launch {
+            val Succefull = getContactDomain.loginCrud(phone,password)
+            isSuccessfull.postValue(Succefull)
+        }
+    }
 }
