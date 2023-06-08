@@ -6,6 +6,13 @@
         android:id="@+id/add"
         android:title="Agregar"
         android:icon="@drawable/ic_add_24"
+        android:visible="false"
+        app:showAsAction="always"/>
+    <item
+        android:id="@+id/face"
+        android:title="Agregar"
+        android:icon="@drawable/ic_person_24"
+        android:visible="false"
         app:showAsAction="always"/>
 
 </menu>
