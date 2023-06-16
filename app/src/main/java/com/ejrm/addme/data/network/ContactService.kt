@@ -29,6 +29,13 @@ class ContactService @Inject constructor(private val api: ContactApiClient) {
         }
     }
 
+    suspend fun updateContactService(id_contacto: String, name: String, country: String, phone: String, instagram: String, facebook: String, password: String): List<ContactResponse> {
+        return withContext(Dispatchers.IO) {
+            val response = api.updateContactApi(id_contacto,name,country,phone,instagram,facebook,password)
+            response.body() ?: emptyList()
+        }
+    }
+
     suspend fun loginService(phone: String, password: String): List<ContactResponse> {
         return withContext(Dispatchers.IO) {
             val response = api.loginApi(phone,password)

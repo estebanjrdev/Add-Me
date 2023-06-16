@@ -26,6 +26,18 @@ interface ContactApiClient {
     ): Response<List<ContactResponse>>
 
     @FormUrlEncoded
+    @POST("/api/update/index.php")
+    suspend fun updateContactApi(
+        @Field("id_contacto") id_contacto: String,
+        @Field("name") name: String,
+        @Field("country") country: String,
+        @Field("phone") phone: String,
+        @Field("instagram") instagram: String,
+        @Field("facebook") facebook: String,
+        @Field("password") password: String
+    ): Response<List<ContactResponse>>
+
+    @FormUrlEncoded
     @POST("/api/login/index.php")
     suspend fun loginApi(
         @Field("phone") phone: String,

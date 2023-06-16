@@ -10,6 +10,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
+import android.text.Editable
 import android.util.Base64
 import android.util.Log
 import android.view.Menu
@@ -55,6 +56,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var addContactBinding: AddContactBinding
     lateinit var viewModel: MainViewModel
     private lateinit var menu: Menu
+    private lateinit var contact: Contact
     var dialog: AlertDialog? = null
     private lateinit var adapter: ContactAdapter
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -144,6 +146,7 @@ class MainActivity : AppCompatActivity() {
             connectivityManager?.activeNetworkInfo?.isConnected ?: false
         }
     }
+
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_NETWORK_STATE, Manifest.permission.INTERNET])
     suspend fun dataConexion(url: String): Boolean = try {
         withContext(Dispatchers.IO) {
@@ -161,6 +164,7 @@ class MainActivity : AppCompatActivity() {
         println("Error al conectar: ${e.message}")
         false
     }
+
     override fun onResume() {
         super.onResume()
         registerReceiver(estadoRed, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
@@ -229,7 +233,7 @@ class MainActivity : AppCompatActivity() {
                 addContactBinding.CodeCountry.registerCarrierNumberEditText(addContactBinding.whatsapp)
 
                 addContactBinding.btnloginContact.setOnClickListener {
-                    if (addContactBinding.whatsapp.text.toString() != "" || addContactBinding.password.text.toString() != "") {
+                    if (addContactBinding.whatsapp.text.toString() != "" && addContactBinding.password.text.toString() != "") {
                         if (addContactBinding.CodeCountry.isValidFullNumber) {
                             addContactBinding.progress.isVisible = true
                             val phoneNumber = addContactBinding.CodeCountry.fullNumber.toString()
@@ -251,7 +255,17 @@ class MainActivity : AppCompatActivity() {
                             )
                                 .show()
                             dialog!!.dismiss()
-                            if (response.success){
+                            if (response.success) {
+                                val phone  = response.phone.subSequence(response.country.length,response.phone.length).toString()
+                                contact = Contact(
+                                    response.id_contacto,
+                                    response.name,
+                                    response.country,
+                                    phone,
+                                    response.instagram,
+                                    response.facebook,
+                                    response.password)
+                                saveContact(this,contact)
                                 menu.findItem(R.id.face)?.isVisible = true
                                 menu.findItem(R.id.add)?.isVisible = false
                             }
@@ -268,7 +282,7 @@ class MainActivity : AppCompatActivity() {
 
                 }
                 addContactBinding.btnAddContact.setOnClickListener {
-                    if (addContactBinding.name.text.toString() != "" || addContactBinding.whatsapp.text.toString() != "" || addContactBinding.password.text.toString() != "") {
+                    if (addContactBinding.name.text.toString() != "" && addContactBinding.whatsapp.text.toString() != "" && addContactBinding.password.text.toString() != "") {
                         if (addContactBinding.CodeCountry.isValidFullNumber) {
                             addContactBinding.progress.isVisible = true
                             val phoneNumber = addContactBinding.CodeCountry.fullNumber.toString()
@@ -309,7 +323,104 @@ class MainActivity : AppCompatActivity() {
                 dialog = alertdialog.create()
                 dialog!!.show()
             }
+            R.id.face -> {
+                addContactBinding = AddContactBinding.inflate(layoutInflater)
+                val alertdialog = AlertDialog.Builder(this)
+                alertdialog.setTitle("Mi Contacto")
+                alertdialog.setView(addContactBinding.root)
+                addContactBinding.login.isVisible = false
+                addContactBinding.btncloseSession.isVisible = true
+                addContactBinding.whatsapp.isEnabled = false
+                addContactBinding.btnAddContact.text = "Actualizar Contacto"
+                addContactBinding.CodeCountry.registerCarrierNumberEditText(addContactBinding.whatsapp)
+                contact = getContact(this)
+
+                addContactBinding.name.text = Editable.Factory.getInstance().newEditable(contact.name)
+                addContactBinding.whatsapp.text = Editable.Factory.getInstance().newEditable(contact.phone)
+                addContactBinding.facebook.text = Editable.Factory.getInstance().newEditable(contact.facebook)
+                addContactBinding.instagram.text = Editable.Factory.getInstance().newEditable(contact.instagram)
+                addContactBinding.password.text = Editable.Factory.getInstance().newEditable(contact.password)
+                addContactBinding.btnAddContact.setOnClickListener {
+                    if (addContactBinding.name.text.toString() != "" || addContactBinding.password.text.toString() != "") {
+                        if (addContactBinding.CodeCountry.isValidFullNumber) {
+                            addContactBinding.progress.isVisible = true
+                            val phoneNumber = addContactBinding.CodeCountry.fullNumber.toString()
+                           println(addContactBinding.whatsapp.text.toString())
+                            val country = addContactBinding.CodeCountry.selectedCountryCode
+                            viewModel.updateContactViewModel(
+                                contact.id_contacto,
+                                addContactBinding.name.text.toString(),
+                                country,
+                                phoneNumber,
+                                addContactBinding.instagram.text.toString(),
+                                addContactBinding.facebook.text.toString(),
+                                addContactBinding.password.text.toString()
+                            )
+                            contact = Contact(
+                                contact.id_contacto,
+                                addContactBinding.name.text.toString(),
+                                country,
+                                phoneNumber,
+                                addContactBinding.instagram.text.toString(),
+                                addContactBinding.facebook.text.toString(),
+                                addContactBinding.password.text.toString())
+                        } else {
+                            Snackbar.make(binding.root, "Teléfono Incorrecto", Snackbar.LENGTH_LONG)
+                                .show()
+                        }
+                        viewModel.getSuccessfulObserver().observe(this, Observer {
+                            val response: ContactResponse = it[0]
+                            addContactBinding.progress.isVisible = false
+                            Snackbar.make(
+                                binding.root,
+                                response.message,
+                                Snackbar.LENGTH_LONG
+                            )
+                                .show()
+                            dialog!!.dismiss()
+                        })
+                        viewModel.getSuccessfulObserver()
+                        viewModel.getAllContact()
+                    } else {
+                        Snackbar.make(
+                            binding.root,
+                            "El nombre y contraseña son obligatorios",
+                            Snackbar.LENGTH_LONG
+                        ).show()
+                    }
+                }
+                addContactBinding.btncloseSession.setOnClickListener {
+                    menu.findItem(R.id.face)?.isVisible = false
+                    menu.findItem(R.id.add)?.isVisible = true
+                }
+                dialog = alertdialog.create()
+                dialog!!.show()
+            }
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    private fun saveContact(context: Context, contact: Contact) {
+        val sharedPreferences: SharedPreferences = context.getSharedPreferences("MyContact", Context.MODE_PRIVATE)
+        val editor: SharedPreferences.Editor = sharedPreferences.edit()
+        editor.putString("id_contacto", contact.id_contacto)
+        editor.putString("name", contact.name)
+        editor.putString("country", contact.country)
+        editor.putString("phone", contact.phone)
+        editor.putString("instagram", contact.instagram)
+        editor.putString("facebook", contact.facebook)
+        editor.putString("password", contact.password)
+        editor.apply()
+    }
+    private fun getContact(context: Context): Contact{
+        val sharedPreferences: SharedPreferences = context.getSharedPreferences("MyContact", Context.MODE_PRIVATE)
+        val id_contacto = sharedPreferences.getString("id_contacto", "") ?: ""
+        val name = sharedPreferences.getString("name", "") ?: ""
+        val country = sharedPreferences.getString("country", "") ?: ""
+        val phone = sharedPreferences.getString("phone", "") ?: ""
+        val instagram = sharedPreferences.getString("instagram", "") ?: ""
+        val facebook = sharedPreferences.getString("facebook", "") ?: ""
+        val password = sharedPreferences.getString("password", "") ?: ""
+        return Contact(id_contacto, name, country, phone, instagram, facebook, password)
     }
 }
