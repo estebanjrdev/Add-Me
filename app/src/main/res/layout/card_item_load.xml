@@ -29,7 +29,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="#c8c8c9"
-                android:src="@drawable/ic_person_24"
                 tools:ignore="ContentDescription" />
 
         </com.google.android.material.card.MaterialCardView>
