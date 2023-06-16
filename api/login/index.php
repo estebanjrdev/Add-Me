@@ -14,9 +14,16 @@ $resultado = false;
              $dbpassword = $row['password'];
              if ($dbphone == $_POST['phone'] && password_verify($_POST['password'], $dbpassword)) {
          
-             $result["success"]=true;
-             $result["message"]="Iniciado Correctamente";
-             $json[]=$result;
+              $result["success"]=true;
+              $result["message"]="Sesión Iniciada";
+              $result["id_contacto"] = $row['id_contacto'];
+              $result["name"] = $row['name'];
+              $result["country"] = $row['country'];
+              $result["phone"] = $row['phone'];
+	      $result["instagram"] = $row['instagram'];	
+              $result["facebook"] = $row['facebook'];
+              $result["password"] = $_POST['password'];
+              $json[]=$result;
              header('Content-Type: application/json; charset=utf-8');
              print json_encode($json);
              
