@@ -62,9 +62,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var contact: Contact
     var dialog: AlertDialog? = null
     private lateinit var adapter: ContactAdapter
+
     companion object {
         private const val PERMISSION_REQUEST_CODE = 123
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -134,7 +136,6 @@ class MainActivity : AppCompatActivity() {
                 Manifest.permission.WRITE_CONTACTS
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            // Solicitar permisos
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(
@@ -144,25 +145,47 @@ class MainActivity : AppCompatActivity() {
                 PERMISSION_REQUEST_CODE
             )
         } else {
-            guardarContacto(this,contact.name,"+"+contact.phone)
+            if (guardarContacto(this, contact.name, "+" + contact.phone)) {
+                Snackbar.make(
+                    binding.root,
+                    "Contacto Guardado",
+                    Snackbar.LENGTH_INDEFINITE
+                ).show()
+            } else {
+                Snackbar.make(
+                    binding.root,
+                    "Ya existe el contacto",
+                    Snackbar.LENGTH_INDEFINITE
+                ).show()
+            }
         }
 
     }
-    private fun guardarContacto(context: Context, nombre: String, numero: String) {
+
+    private fun guardarContacto(context: Context, nombre: String, numero: String): Boolean {
         val contentResolver = context.contentResolver
+
+        val existingContactUri = buscarContactoPorNumero(context, numero)
+        if (existingContactUri != null) {
+            return false
+        }
 
         val contentValues = ContentValues().apply {
             put(ContactsContract.RawContacts.ACCOUNT_TYPE, null as String?)
             put(ContactsContract.RawContacts.ACCOUNT_NAME, null as String?)
         }
 
-        val rawContactUri = contentResolver.insert(ContactsContract.RawContacts.CONTENT_URI, contentValues)
+        val rawContactUri =
+            contentResolver.insert(ContactsContract.RawContacts.CONTENT_URI, contentValues)
 
         val rawContactId = rawContactUri?.lastPathSegment
 
         val values = ContentValues().apply {
             put(ContactsContract.Data.RAW_CONTACT_ID, rawContactId)
-            put(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
+            put(
+                ContactsContract.Data.MIMETYPE,
+                ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE
+            )
             put(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, nombre)
         }
 
@@ -170,13 +193,46 @@ class MainActivity : AppCompatActivity() {
 
         val phoneValues = ContentValues().apply {
             put(ContactsContract.Data.RAW_CONTACT_ID, rawContactId)
-            put(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
+            put(
+                ContactsContract.Data.MIMETYPE,
+                ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE
+            )
             put(ContactsContract.CommonDataKinds.Phone.NUMBER, numero)
-            put(ContactsContract.CommonDataKinds.Phone.TYPE, ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE)
+            put(
+                ContactsContract.CommonDataKinds.Phone.TYPE,
+                ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE
+            )
         }
 
         contentResolver.insert(ContactsContract.Data.CONTENT_URI, phoneValues)
+
+        return true
     }
+
+    private fun buscarContactoPorNumero(context: Context, numero: String): Uri? {
+        val contentResolver = context.contentResolver
+
+        val uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI
+        val projection = arrayOf(ContactsContract.CommonDataKinds.Phone.CONTACT_ID)
+        val selection = ContactsContract.CommonDataKinds.Phone.NUMBER + " = ?"
+        val selectionArgs = arrayOf(numero)
+        val sortOrder = null
+
+        contentResolver.query(uri, projection, selection, selectionArgs, sortOrder)?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                val contactIdColumnIndex =
+                    cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID)
+                val contactId = cursor.getString(contactIdColumnIndex)
+                return ContactsContract.Contacts.getLookupUri(
+                    contactId.toLong(),
+                    ContactsContract.Contacts.LOOKUP_KEY
+                )
+            }
+        }
+
+        return null
+    }
+
 
     private fun onClickWhatsapp(whatsapp: String) {
         openLink("https://wa.me/$whatsapp?text=Hola%20vengo%20desde%20AddMe%20la%20aplicación,%20agregame%20para%20ver%20estados.")
@@ -233,13 +289,14 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
-        unregisterReceiver(estadoRed)
+//        unregisterReceiver(estadoRed)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(estadoRed)
     }
+
     private val estadoRed = object : BroadcastReceiver() {
         override fun onReceive(p0: Context?, p1: Intent?) {
             if (checkForInternet()) {
@@ -326,7 +383,10 @@ class MainActivity : AppCompatActivity() {
                                 .show()
                             dialog!!.dismiss()
                             if (response.success) {
-                                val phone  = response.phone.subSequence(response.country.length,response.phone.length).toString()
+                                val phone = response.phone.subSequence(
+                                    response.country.length,
+                                    response.phone.length
+                                ).toString()
                                 contact = Contact(
                                     response.id_contacto,
                                     response.name,
@@ -334,8 +394,9 @@ class MainActivity : AppCompatActivity() {
                                     phone,
                                     response.instagram,
                                     response.facebook,
-                                    response.password)
-                                saveContact(this,contact)
+                                    response.password
+                                )
+                                saveContact(this, contact)
                                 menu.findItem(R.id.face)?.isVisible = true
                                 menu.findItem(R.id.add)?.isVisible = false
                             }
@@ -405,17 +466,22 @@ class MainActivity : AppCompatActivity() {
                 addContactBinding.CodeCountry.registerCarrierNumberEditText(addContactBinding.whatsapp)
                 contact = getContact(this)
 
-                addContactBinding.name.text = Editable.Factory.getInstance().newEditable(contact.name)
-                addContactBinding.whatsapp.text = Editable.Factory.getInstance().newEditable(contact.phone)
-                addContactBinding.facebook.text = Editable.Factory.getInstance().newEditable(contact.facebook)
-                addContactBinding.instagram.text = Editable.Factory.getInstance().newEditable(contact.instagram)
-                addContactBinding.password.text = Editable.Factory.getInstance().newEditable(contact.password)
+                addContactBinding.name.text =
+                    Editable.Factory.getInstance().newEditable(contact.name)
+                addContactBinding.whatsapp.text =
+                    Editable.Factory.getInstance().newEditable(contact.phone)
+                addContactBinding.facebook.text =
+                    Editable.Factory.getInstance().newEditable(contact.facebook)
+                addContactBinding.instagram.text =
+                    Editable.Factory.getInstance().newEditable(contact.instagram)
+                addContactBinding.password.text =
+                    Editable.Factory.getInstance().newEditable(contact.password)
                 addContactBinding.btnAddContact.setOnClickListener {
                     if (addContactBinding.name.text.toString() != "" || addContactBinding.password.text.toString() != "") {
                         if (addContactBinding.CodeCountry.isValidFullNumber) {
                             addContactBinding.progress.isVisible = true
                             val phoneNumber = addContactBinding.CodeCountry.fullNumber.toString()
-                           println(addContactBinding.whatsapp.text.toString())
+                            println(addContactBinding.whatsapp.text.toString())
                             val country = addContactBinding.CodeCountry.selectedCountryCode
                             viewModel.updateContactViewModel(
                                 contact.id_contacto,
@@ -433,7 +499,8 @@ class MainActivity : AppCompatActivity() {
                                 phoneNumber,
                                 addContactBinding.instagram.text.toString(),
                                 addContactBinding.facebook.text.toString(),
-                                addContactBinding.password.text.toString())
+                                addContactBinding.password.text.toString()
+                            )
                         } else {
                             Snackbar.make(binding.root, "Teléfono Incorrecto", Snackbar.LENGTH_LONG)
                                 .show()
@@ -471,7 +538,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun saveContact(context: Context, contact: Contact) {
-        val sharedPreferences: SharedPreferences = context.getSharedPreferences("MyContact", Context.MODE_PRIVATE)
+        val sharedPreferences: SharedPreferences =
+            context.getSharedPreferences("MyContact", Context.MODE_PRIVATE)
         val editor: SharedPreferences.Editor = sharedPreferences.edit()
         editor.putString("id_contacto", contact.id_contacto)
         editor.putString("name", contact.name)
@@ -482,8 +550,10 @@ class MainActivity : AppCompatActivity() {
         editor.putString("password", contact.password)
         editor.apply()
     }
-    private fun getContact(context: Context): Contact{
-        val sharedPreferences: SharedPreferences = context.getSharedPreferences("MyContact", Context.MODE_PRIVATE)
+
+    private fun getContact(context: Context): Contact {
+        val sharedPreferences: SharedPreferences =
+            context.getSharedPreferences("MyContact", Context.MODE_PRIVATE)
         val id_contacto = sharedPreferences.getString("id_contacto", "") ?: ""
         val name = sharedPreferences.getString("name", "") ?: ""
         val country = sharedPreferences.getString("country", "") ?: ""
@@ -503,9 +573,9 @@ class MainActivity : AppCompatActivity() {
         when (requestCode) {
             PERMISSION_REQUEST_CODE -> {
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Toast.makeText(this,"Permiso Concedido",Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Permiso Concedido", Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(this,"Permiso Denegado",Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Permiso Denegado", Toast.LENGTH_SHORT).show()
                 }
             }
         }

@@ -28,8 +28,22 @@ class ContactViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         emisoraCardBinding.txtName.text = contact.name
         emisoraCardBinding.CodeCountry.setCountryForPhoneCode(contact.country.toInt())
         emisoraCardBinding.btnWhatsApp.setOnClickListener { onClickWhatsapp(contact.phone) }
-        emisoraCardBinding.btnInstagram.setOnClickListener { onClickInstagram(contact.instagram) }
-        emisoraCardBinding.btnFacebook.setOnClickListener { onClickFacebook(contact.facebook) }
+        emisoraCardBinding.btnInstagram.setOnClickListener {
+            if (contact.instagram == "") {
+                emisoraCardBinding.btnInstagram.isEnabled = false
+                Toast.makeText(itemView.context, "Sin Instagram", Toast.LENGTH_SHORT).show()
+            } else {
+                onClickInstagram(contact.instagram)
+            }
+        }
+        emisoraCardBinding.btnFacebook.setOnClickListener {
+            if (contact.facebook == "") {
+                emisoraCardBinding.btnFacebook.isEnabled = false
+                Toast.makeText(itemView.context, "Sin Facebbok", Toast.LENGTH_SHORT).show()
+            } else {
+                onClickFacebook(contact.facebook)
+            }
+        }
         itemView.setOnClickListener { onClickListener(contact) }
     }
 }
