@@ -9,6 +9,7 @@ import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.ContactsContract
 import android.provider.MediaStore
 import android.text.Editable
 import android.util.Base64
@@ -17,11 +18,13 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.SearchView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.Observer
@@ -59,6 +62,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var contact: Contact
     var dialog: AlertDialog? = null
     private lateinit var adapter: ContactAdapter
+    companion object {
+        private const val PERMISSION_REQUEST_CODE = 123
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -119,7 +125,57 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun onItemSelected(contact: Contact) {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.READ_CONTACTS
+            ) != PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.WRITE_CONTACTS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // Solicitar permisos
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(
+                    Manifest.permission.READ_CONTACTS,
+                    Manifest.permission.WRITE_CONTACTS
+                ),
+                PERMISSION_REQUEST_CODE
+            )
+        } else {
+            guardarContacto(this,contact.name,"+"+contact.phone)
+        }
 
+    }
+    private fun guardarContacto(context: Context, nombre: String, numero: String) {
+        val contentResolver = context.contentResolver
+
+        val contentValues = ContentValues().apply {
+            put(ContactsContract.RawContacts.ACCOUNT_TYPE, null as String?)
+            put(ContactsContract.RawContacts.ACCOUNT_NAME, null as String?)
+        }
+
+        val rawContactUri = contentResolver.insert(ContactsContract.RawContacts.CONTENT_URI, contentValues)
+
+        val rawContactId = rawContactUri?.lastPathSegment
+
+        val values = ContentValues().apply {
+            put(ContactsContract.Data.RAW_CONTACT_ID, rawContactId)
+            put(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
+            put(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, nombre)
+        }
+
+        contentResolver.insert(ContactsContract.Data.CONTENT_URI, values)
+
+        val phoneValues = ContentValues().apply {
+            put(ContactsContract.Data.RAW_CONTACT_ID, rawContactId)
+            put(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
+            put(ContactsContract.CommonDataKinds.Phone.NUMBER, numero)
+            put(ContactsContract.CommonDataKinds.Phone.TYPE, ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE)
+        }
+
+        contentResolver.insert(ContactsContract.Data.CONTENT_URI, phoneValues)
     }
 
     private fun onClickWhatsapp(whatsapp: String) {
@@ -170,6 +226,20 @@ class MainActivity : AppCompatActivity() {
         registerReceiver(estadoRed, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
     }
 
+    override fun onPause() {
+        super.onPause()
+        unregisterReceiver(estadoRed)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        unregisterReceiver(estadoRed)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(estadoRed)
+    }
     private val estadoRed = object : BroadcastReceiver() {
         override fun onReceive(p0: Context?, p1: Intent?) {
             if (checkForInternet()) {
@@ -422,5 +492,22 @@ class MainActivity : AppCompatActivity() {
         val facebook = sharedPreferences.getString("facebook", "") ?: ""
         val password = sharedPreferences.getString("password", "") ?: ""
         return Contact(id_contacto, name, country, phone, instagram, facebook, password)
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            PERMISSION_REQUEST_CODE -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this,"Permiso Concedido",Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this,"Permiso Denegado",Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 }
