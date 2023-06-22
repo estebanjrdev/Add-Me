@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.RequiresApi
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.ejrm.addme.R
 import com.ejrm.addme.data.model.Contact
@@ -19,8 +20,11 @@ class ContactAdapter(
 ) :
     RecyclerView.Adapter<ContactViewHolder>() {
     private var contactList = listOf<Contact>()
-    fun updateList(list: List<Contact>) {
-        contactList = list
+    fun updateList(newList: List<Contact>) {
+        val contactDiff = ContactDiffUtil(contactList,newList)
+        val result: DiffUtil.DiffResult = DiffUtil.calculateDiff(contactDiff)
+        contactList = newList
+        result.dispatchUpdatesTo(this)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ContactViewHolder {

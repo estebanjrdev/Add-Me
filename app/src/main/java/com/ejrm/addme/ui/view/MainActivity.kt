@@ -83,7 +83,7 @@ class MainActivity : AppCompatActivity() {
                 viewModel.livedatalist.observe(this@MainActivity, Observer {
                     if (it != null) {
                         adapter.updateList(it)
-                        adapter.notifyDataSetChanged()
+                        //adapter.notifyDataSetChanged()
                     } else {
                         Snackbar.make(binding.root, "No hay resultados", Snackbar.LENGTH_LONG)
                             .show()
@@ -116,7 +116,7 @@ class MainActivity : AppCompatActivity() {
         viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
         viewModel.livedatalist.observe(this@MainActivity, Observer {
             adapter.updateList(it)
-            adapter.notifyDataSetChanged()
+            //adapter.notifyDataSetChanged()
         })
         viewModel.getAllContact()
     }
