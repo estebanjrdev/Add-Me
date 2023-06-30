@@ -3,23 +3,16 @@ package com.ejrm.addme.ui.view
 import android.Manifest
 import android.content.*
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.ContactsContract
-import android.provider.MediaStore
 import android.text.Editable
-import android.util.Base64
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.SearchView
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AlertDialog
@@ -37,27 +30,21 @@ import com.ejrm.addme.databinding.ActivityMainBinding
 import com.ejrm.addme.databinding.AddContactBinding
 import com.ejrm.addme.ui.view.adapters.ContactAdapter
 import com.ejrm.addme.ui.viewmodel.MainViewModel
+import com.ejrm.addme.ui.viewmodel.NetworkStateViewModel
 import com.google.android.material.snackbar.Snackbar
-import com.hbb20.CountryCodePicker
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
-import okhttp3.RequestBody
-import java.io.ByteArrayOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
-import java.sql.DriverManager
 import java.sql.DriverManager.println
-import java.time.LocalDateTime
 import java.util.*
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var addContactBinding: AddContactBinding
     lateinit var viewModel: MainViewModel
+    lateinit var networkviewmodel: NetworkStateViewModel
     private lateinit var menu: Menu
     private lateinit var contact: Contact
     var dialog: AlertDialog? = null
@@ -71,19 +58,33 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        networkviewmodel = ViewModelProvider(this).get(NetworkStateViewModel::class.java)
+        networkviewmodel.isNetworkAvailable.observe(this, Observer { isAvailable ->
+            if (isAvailable) {
+                initRecyclerView()
+                initViewModel()
+            } else {
+                Snackbar.make(
+                    binding.root,
+                    "Verifique su conexión a internet",
+                    Snackbar.LENGTH_INDEFINITE
+                ).show()
+                binding.viewLoading.isVisible = true
+                menu.findItem(R.id.add)?.isVisible = false
+                binding.searchView.isVisible = false
+                binding.recyclerContact.isVisible = false
+            }
+        })
 
-        initRecyclerView()
-        initViewModel()
         binding.swipe.setOnRefreshListener {
-            initViewModel()
+            viewModel.getAllContact()
             binding.swipe.isRefreshing = false
         }
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(p0: String?): Boolean {
                 viewModel.livedatalist.observe(this@MainActivity, Observer {
-                    if (it != null) {
+                    if (it.isNotEmpty()) {
                         adapter.updateList(it)
-                        //adapter.notifyDataSetChanged()
                     } else {
                         Snackbar.make(binding.root, "No hay resultados", Snackbar.LENGTH_LONG)
                             .show()
@@ -95,7 +96,7 @@ class MainActivity : AppCompatActivity() {
 
             override fun onQueryTextChange(p0: String?): Boolean {
                 if (p0.equals("")) {
-                    initViewModel()
+                    viewModel.getAllContact()
                 }
                 return true
             }
@@ -115,8 +116,13 @@ class MainActivity : AppCompatActivity() {
     fun initViewModel() {
         viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
         viewModel.livedatalist.observe(this@MainActivity, Observer {
-            adapter.updateList(it)
-            //adapter.notifyDataSetChanged()
+            if (it.isNotEmpty()) {
+                adapter.updateList(it)
+                binding.viewLoading.isVisible = false
+                menu.findItem(R.id.add)?.isVisible = true
+                binding.searchView.isVisible = true
+                binding.recyclerContact.isVisible = true
+            }
         })
         viewModel.getAllContact()
     }
@@ -145,7 +151,7 @@ class MainActivity : AppCompatActivity() {
                 PERMISSION_REQUEST_CODE
             )
         } else {
-            if (guardarContacto(this, contact.name, "+" + contact.phone)) {
+            if (saveContact(this, contact.name, "+" + contact.phone)) {
                 Snackbar.make(
                     binding.root,
                     "Contacto Guardado",
@@ -162,7 +168,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun guardarContacto(context: Context, nombre: String, numero: String): Boolean {
+    private fun saveContact(context: Context, nombre: String, numero: String): Boolean {
         val contentResolver = context.contentResolver
 
         val existingContactUri = buscarContactoPorNumero(context, numero)
@@ -246,94 +252,8 @@ class MainActivity : AppCompatActivity() {
         openLink("https://www.facebook.com/$facebook")
     }
 
-    fun Context.checkForInternet(): Boolean {
-        val connectivityManager =
-            getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            connectivityManager?.getNetworkCapabilities(connectivityManager.activeNetwork)?.run {
-                hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
-            } ?: false
-        } else {
-            @Suppress("DEPRECATION")
-            connectivityManager?.activeNetworkInfo?.isConnected ?: false
-        }
-    }
-
-    @RequiresPermission(anyOf = [Manifest.permission.ACCESS_NETWORK_STATE, Manifest.permission.INTERNET])
-    suspend fun dataConexion(url: String): Boolean = try {
-        withContext(Dispatchers.IO) {
-            URL(url).openConnection() as HttpURLConnection
-        }.apply {
-            requestMethod = "HEAD"
-            setRequestProperty("User-Agent", "Android")
-            connectTimeout = 1500
-            readTimeout = 1500
-        }.let {
-            it.connect()
-            it.responseCode == HttpURLConnection.HTTP_OK
-        }
-    } catch (e: Exception) {
-        println("Error al conectar: ${e.message}")
-        false
-    }
-
-    override fun onResume() {
-        super.onResume()
-        registerReceiver(estadoRed, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
-    }
-
-    override fun onPause() {
-        super.onPause()
-        unregisterReceiver(estadoRed)
-    }
-
-    override fun onStop() {
-        super.onStop()
-//        unregisterReceiver(estadoRed)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        unregisterReceiver(estadoRed)
-    }
-
-    private val estadoRed = object : BroadcastReceiver() {
-        override fun onReceive(p0: Context?, p1: Intent?) {
-            if (checkForInternet()) {
-                GlobalScope.launch(Dispatchers.Main) {
-                    var response =
-                        withContext(Dispatchers.IO) { dataConexion("https://www.google.com") }
-                    if (!response) {
-                        Snackbar.make(
-                            binding.root,
-                            "No tiene conexión con la red",
-                            Snackbar.LENGTH_INDEFINITE
-                        ).show()
-                        binding.viewLoading.isVisible = true
-                        menu.findItem(R.id.add)?.isVisible = false
-                        binding.searchView.isVisible = false
-                        binding.recyclerContact.isVisible = false
-                    } else {
-                        binding.viewLoading.isVisible = false
-                        menu.findItem(R.id.add)?.isVisible = true
-                        binding.searchView.isVisible = true
-                        binding.recyclerContact.isVisible = true
-                        Snackbar.make(binding.root, "Conectado!!!", Snackbar.LENGTH_LONG).show()
-                    }
-                }
-            } else {
-                val snackbar: Snackbar = Snackbar.make(
-                    binding.root,
-                    "Active sus datos móviles o wifi",
-                    Snackbar.LENGTH_INDEFINITE
-                )
-                snackbar.show()
-                binding.viewLoading.isVisible = true
-                menu.findItem(R.id.add)?.isVisible = false
-                binding.searchView.isVisible = false
-                binding.recyclerContact.isVisible = false
-            }
-        }
+    fun validPassword(password: String): Boolean {
+        return password.length >= 8
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -348,7 +268,7 @@ class MainActivity : AppCompatActivity() {
             R.id.add -> {
                 addContactBinding = AddContactBinding.inflate(layoutInflater)
                 val alertdialog = AlertDialog.Builder(this)
-                alertdialog.setTitle("Add Me")
+                alertdialog.setTitle("Agregame")
                 alertdialog.setView(addContactBinding.root)
                 addContactBinding.login.setOnClickListener(View.OnClickListener {
                     addContactBinding.name.isVisible = false
@@ -372,7 +292,7 @@ class MainActivity : AppCompatActivity() {
                             Snackbar.make(binding.root, "Teléfono Incorrecto", Snackbar.LENGTH_LONG)
                                 .show()
                         }
-                        viewModel.getSuccessfulObserver().observe(this, Observer {
+                        viewModel.isSuccessfull.observe(this, Observer {
                             val response: ContactResponse = it[0]
                             addContactBinding.progress.isVisible = false
                             Snackbar.make(
@@ -401,7 +321,6 @@ class MainActivity : AppCompatActivity() {
                                 menu.findItem(R.id.add)?.isVisible = false
                             }
                         })
-                        viewModel.getSuccessfulObserver()
                         viewModel.getAllContact()
                     } else {
                         Snackbar.make(
@@ -414,35 +333,47 @@ class MainActivity : AppCompatActivity() {
                 }
                 addContactBinding.btnAddContact.setOnClickListener {
                     if (addContactBinding.name.text.toString() != "" && addContactBinding.whatsapp.text.toString() != "" && addContactBinding.password.text.toString() != "") {
-                        if (addContactBinding.CodeCountry.isValidFullNumber) {
-                            addContactBinding.progress.isVisible = true
-                            val phoneNumber = addContactBinding.CodeCountry.fullNumber.toString()
-                            val country = addContactBinding.CodeCountry.selectedCountryCode
-                            viewModel.add(
-                                addContactBinding.name.text.toString(),
-                                country,
-                                phoneNumber,
-                                addContactBinding.instagram.text.toString(),
-                                addContactBinding.facebook.text.toString(),
-                                addContactBinding.password.text.toString()
-                            )
+                        if (validPassword(addContactBinding.password.text.toString())) {
+                            if (addContactBinding.CodeCountry.isValidFullNumber) {
+                                addContactBinding.progress.isVisible = true
+                                val phoneNumber =
+                                    addContactBinding.CodeCountry.fullNumber.toString()
+                                val country = addContactBinding.CodeCountry.selectedCountryCode
+                                viewModel.add(
+                                    addContactBinding.name.text.toString(),
+                                    country,
+                                    phoneNumber,
+                                    addContactBinding.instagram.text.toString(),
+                                    addContactBinding.facebook.text.toString(),
+                                    addContactBinding.password.text.toString()
+                                )
+                            } else {
+                                Snackbar.make(
+                                    binding.root,
+                                    "Teléfono Incorrecto",
+                                    Snackbar.LENGTH_LONG
+                                )
+                                    .show()
+                            }
+                            viewModel.isSuccessfull.observe(this, Observer {
+                                val response: ContactResponse = it[0]
+                                addContactBinding.progress.isVisible = false
+                                Snackbar.make(
+                                    binding.root,
+                                    response.message,
+                                    Snackbar.LENGTH_LONG
+                                )
+                                    .show()
+                                dialog!!.dismiss()
+                            })
+                            viewModel.getAllContact()
                         } else {
-                            Snackbar.make(binding.root, "Teléfono Incorrecto", Snackbar.LENGTH_LONG)
-                                .show()
-                        }
-                        viewModel.getSuccessfulObserver().observe(this, Observer {
-                            val response: ContactResponse = it[0]
-                            addContactBinding.progress.isVisible = false
                             Snackbar.make(
                                 binding.root,
-                                response.message,
+                                "La contraseña debe tener mínimo 8 caracteres",
                                 Snackbar.LENGTH_LONG
-                            )
-                                .show()
-                            dialog!!.dismiss()
-                        })
-                        viewModel.getSuccessfulObserver()
-                        viewModel.getAllContact()
+                            ).show()
+                        }
                     } else {
                         Snackbar.make(
                             binding.root,
@@ -505,7 +436,7 @@ class MainActivity : AppCompatActivity() {
                             Snackbar.make(binding.root, "Teléfono Incorrecto", Snackbar.LENGTH_LONG)
                                 .show()
                         }
-                        viewModel.getSuccessfulObserver().observe(this, Observer {
+                        viewModel.isSuccessfull.observe(this, Observer {
                             val response: ContactResponse = it[0]
                             addContactBinding.progress.isVisible = false
                             Snackbar.make(
@@ -516,7 +447,6 @@ class MainActivity : AppCompatActivity() {
                                 .show()
                             dialog!!.dismiss()
                         })
-                        viewModel.getSuccessfulObserver()
                         viewModel.getAllContact()
                     } else {
                         Snackbar.make(
@@ -529,6 +459,7 @@ class MainActivity : AppCompatActivity() {
                 addContactBinding.btncloseSession.setOnClickListener {
                     menu.findItem(R.id.face)?.isVisible = false
                     menu.findItem(R.id.add)?.isVisible = true
+                    dialog!!.dismiss()
                 }
                 dialog = alertdialog.create()
                 dialog!!.show()

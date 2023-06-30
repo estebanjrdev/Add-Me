@@ -16,10 +16,15 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(private val getContactDomain: CrudContact) : ViewModel() {
 
     private val _livedatalist = MutableLiveData<List<Contact>>()
-    val livedatalist: LiveData<List<Contact>> = _livedatalist
-    val isSuccessfull = MutableLiveData<List<ContactResponse>>()
+    val livedatalist: LiveData<List<Contact>>
+        get() = _livedatalist
+    private val _isSuccessfull = MutableLiveData<List<ContactResponse>>()
+    val isSuccessfull: LiveData<List<ContactResponse>>
+        get() = _isSuccessfull
 
-    fun getSuccessfulObserver(): MutableLiveData<List<ContactResponse>> = isSuccessfull
+    init {
+        getAllContact()
+    }
 
     fun getAllContact() {
         viewModelScope.launch {
@@ -35,24 +40,48 @@ class MainViewModel @Inject constructor(private val getContactDomain: CrudContac
         }
     }
 
-    fun add(name: String, country:String, phone: String, instagram: String, facebook: String, password: String) {
+    fun add(
+        name: String,
+        country: String,
+        phone: String,
+        instagram: String,
+        facebook: String,
+        password: String
+    ) {
         viewModelScope.launch {
-            val Succefull = getContactDomain.invokeAdd(name,country, phone, instagram, facebook, password)
-            isSuccessfull.postValue(Succefull)
+            val Succefull =
+                getContactDomain.invokeAdd(name, country, phone, instagram, facebook, password)
+            _isSuccessfull.postValue(Succefull)
         }
     }
 
-    fun updateContactViewModel(id_contacto: String, name: String, country: String, phone: String, instagram: String, facebook: String, password: String) {
+    fun updateContactViewModel(
+        id_contacto: String,
+        name: String,
+        country: String,
+        phone: String,
+        instagram: String,
+        facebook: String,
+        password: String
+    ) {
         viewModelScope.launch {
-            val Succefull = getContactDomain.invokeUpdateCrud(id_contacto, name, country, phone, instagram, facebook, password)
-            isSuccessfull.postValue(Succefull)
+            val Succefull = getContactDomain.invokeUpdateCrud(
+                id_contacto,
+                name,
+                country,
+                phone,
+                instagram,
+                facebook,
+                password
+            )
+            _isSuccessfull.postValue(Succefull)
         }
     }
 
-    fun loginViewModel(phone:String, password:String){
+    fun loginViewModel(phone: String, password: String) {
         viewModelScope.launch {
-            val Succefull = getContactDomain.loginCrud(phone,password)
-            isSuccessfull.postValue(Succefull)
+            val Succefull = getContactDomain.loginCrud(phone, password)
+            _isSuccessfull.postValue(Succefull)
         }
     }
 }
