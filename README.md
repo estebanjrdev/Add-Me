@@ -6,3 +6,4 @@
 - Inyecciones de dependencia con Dagger Hilt
 - Retrofit 
 - Coroutines
+- SharedPreferences
